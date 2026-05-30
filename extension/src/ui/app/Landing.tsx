@@ -1,6 +1,7 @@
-// Onboarding landing: no-scroll. Title + description + sign-in, with the persona
+// Onboarding landing: no-scroll. Title + description + Clerk sign-in, with the persona
 // on the right playing their welcome dialog (each line carries its own emotion).
 
+import { SignInButton } from "@clerk/chrome-extension";
 import { useState } from "react";
 import type { Persona } from "../../types.ts";
 import { neutralEmotion } from "../../shared/persona.ts";
@@ -8,10 +9,9 @@ import { useTypewriter } from "../consul/useTypewriter.ts";
 
 interface Props {
   persona: Persona;
-  onSignIn: () => void;
 }
 
-export function Landing({ persona, onSignIn }: Props) {
+export function Landing({ persona }: Props) {
   const lines =
     persona.welcomeDialog && persona.welcomeDialog.length
       ? persona.welcomeDialog
@@ -26,7 +26,7 @@ export function Landing({ persona, onSignIn }: Props) {
   const atLast = i >= lines.length - 1;
 
   function advance() {
-    if (!done) return; // let the line finish first
+    if (!done) return;
     if (!atLast) setI((n) => n + 1);
   }
 
@@ -54,9 +54,9 @@ export function Landing({ persona, onSignIn }: Props) {
             </span>
           )}
 
-          <button className="wp-landing__signin" onClick={onSignIn}>
-            Sign in to begin
-          </button>
+          <SignInButton mode="modal">
+            <button className="wp-landing__signin">Sign in to begin</button>
+          </SignInButton>
         </div>
 
         <div className="wp-persona">

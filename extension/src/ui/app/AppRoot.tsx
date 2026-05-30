@@ -1,29 +1,27 @@
 // The full-page app: onboarding landing when signed out, dashboard when signed in.
-// Opened automatically on install; also reachable from the popup.
+// Uses Clerk auth (wrapped at app.tsx entrypoint).
 
+import { useAuth } from "@clerk/chrome-extension";
 import { useEffect, useState } from "react";
 import type { Persona } from "../../types.ts";
 import { loadPersona } from "../../shared/persona.ts";
 import { sendToBrain } from "../shared/messaging.ts";
-import { isSignedIn, setSignedIn } from "./auth.ts";
 import { Landing } from "./Landing.tsx";
 import { Dashboard } from "./Dashboard.tsx";
 
 export function AppRoot() {
+  const { isSignedIn, isLoaded } = useAuth();
   const [persona, setPersona] = useState<Persona | null>(null);
-  const [signedIn, setSignedInState] = useState<boolean | null>(null);
 
   useEffect(() => {
     void (async () => {
       const res = await sendToBrain({ type: "settings:get" });
       const personaId = res.type === "settings" ? res.settings.personaId : "consul";
-      const p = await loadPersona(personaId);
-      setPersona(p);
-      setSignedInState(await isSignedIn());
+      setPersona(await loadPersona(personaId));
     })();
   }, []);
 
-  if (!persona || signedIn === null) {
+  if (!persona || !isLoaded) {
     return (
       <div className="wp-root">
         <div className="wp-stage">
@@ -35,16 +33,8 @@ export function AppRoot() {
     );
   }
 
-  if (!signedIn) {
-    return (
-      <Landing
-        persona={persona}
-        onSignIn={async () => {
-          await setSignedIn(true); // PLACEHOLDER — real Clerk sign-in lands in M4
-          setSignedInState(true);
-        }}
-      />
-    );
+  if (!isSignedIn) {
+    return <Landing persona={persona} />;
   }
 
   return <Dashboard persona={persona} />;
