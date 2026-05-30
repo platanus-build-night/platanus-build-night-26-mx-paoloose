@@ -38,6 +38,7 @@ body {
   border-bottom: 1px solid var(--pop-border);
 }
 .wp-pop__title { font-weight: 700; font-size: 13px; letter-spacing: 0.08em; text-transform: uppercase; }
+.wp-pop__user { font-size: 10px; color: var(--pop-muted); letter-spacing: 0.05em; }
 .wp-pop__status { font-size: 10px; letter-spacing: 0.12em; text-transform: uppercase; color: var(--pop-muted); }
 .wp-pop__status[data-online="true"] { color: var(--pop-green); }
 

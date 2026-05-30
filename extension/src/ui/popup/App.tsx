@@ -1,14 +1,12 @@
 // Popup. Two states:
-//   - NOT set up  -> logo + invitation to set up (opens the onboarding page).
-//   - set up      -> consul (+ "Change consul"), current activity (+ switcher),
-//                    debug toggle, and View Passport / Configure buttons.
-// "Passport" and "Configure" open the respective tabs of the app/dashboard page.
+//   - NOT signed in -> logo + sign-in with Clerk.
+//   - signed in     -> consul, activity, View Passport / Configure buttons.
 
+import { useAuth, useUser } from "@clerk/chrome-extension";
 import { useEffect, useState } from "react";
 import type { PassportActivity, Persona, Settings } from "../../types.ts";
 import { listPersonas, loadPersona, restEmotion, spriteFor, type PersonaSummary } from "../../shared/persona.ts";
 import { sendToBrain } from "../shared/messaging.ts";
-import { isSignedIn } from "../app/auth.ts";
 import { IS_DEBUG } from "../../shared/env.ts";
 
 function openApp(tab?: "dashboard" | "passport" | "configure") {
@@ -18,8 +16,8 @@ function openApp(tab?: "dashboard" | "passport" | "configure") {
 }
 
 export function App() {
-  const [ready, setReady] = useState(false);
-  const [setup, setSetup] = useState(false);
+  const { isSignedIn, isLoaded } = useAuth();
+  const { user } = useUser();
   const [settings, setSettings] = useState<Settings | null>(null);
   const [persona, setPersona] = useState<Persona | null>(null);
   const [personaList, setPersonaList] = useState<PersonaSummary[]>([]);
@@ -27,22 +25,18 @@ export function App() {
   const [changing, setChanging] = useState(false);
 
   useEffect(() => {
+    if (!isSignedIn) return;
     void (async () => {
-      const signedIn = await isSignedIn();
-      setSetup(signedIn);
-      if (signedIn) {
-        const s = await sendToBrain({ type: "settings:get" });
-        if (s.type === "settings") {
-          setSettings(s.settings);
-          setPersona(await loadPersona(s.settings.personaId));
-        }
-        setPersonaList(await listPersonas());
-        const p = await sendToBrain({ type: "data:passport" });
-        if (p.type === "passport") setActivities(p.activities.filter((a) => a.status !== "done"));
+      const s = await sendToBrain({ type: "settings:get" });
+      if (s.type === "settings") {
+        setSettings(s.settings);
+        setPersona(await loadPersona(s.settings.personaId));
       }
-      setReady(true);
+      setPersonaList(await listPersonas());
+      const p = await sendToBrain({ type: "data:passport" });
+      if (p.type === "passport") setActivities(p.activities.filter((a) => a.status !== "done"));
     })();
-  }, []);
+  }, [isSignedIn]);
 
   async function patch(p: Partial<Settings>) {
     await sendToBrain({ type: "settings:set", patch: p });
@@ -62,10 +56,10 @@ export function App() {
     if (p.type === "passport") setActivities(p.activities.filter((a) => a.status !== "done"));
   }
 
-  if (!ready) return <div className="wp-pop" />;
+  if (!isLoaded) return <div className="wp-pop" />;
 
-  // ---- Not set up: invite to onboarding ----
-  if (!setup) {
+  // ---- Not signed in: invite to sign in ----
+  if (!isSignedIn) {
     return (
       <div className="wp-pop wp-pop--setup">
         <img className="wp-pop__logo" src="assets/logo.png" alt="Web Passport" />
@@ -78,13 +72,14 @@ export function App() {
     );
   }
 
-  // ---- Set up ----
+  // ---- Signed in ----
   const activeId = activities.find((a) => a.status === "active")?.id ?? "";
 
   return (
     <div className="wp-pop">
       <div className="wp-pop__head">
         <span className="wp-pop__title">🛂 Web Passport</span>
+        <span className="wp-pop__user">{user?.primaryEmailAddress?.emailAddress ?? "Citizen"}</span>
       </div>
 
       {/* Persona */}
@@ -147,7 +142,7 @@ export function App() {
         </div>
       )}
 
-      {/* Navigation to the app page */}
+      {/* Navigation */}
       <div className="wp-pop__actions">
         <button className="wp-pop__action" onClick={() => openApp("passport")}>
           View passport
