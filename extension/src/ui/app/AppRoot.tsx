@@ -4,7 +4,6 @@
 import { useEffect, useState } from "react";
 import type { Persona } from "../../types.ts";
 import { loadPersona } from "../../shared/persona.ts";
-import { applyTheme } from "../shared/theme.ts";
 import { sendToBrain } from "../shared/messaging.ts";
 import { isSignedIn, setSignedIn } from "./auth.ts";
 import { Landing } from "./Landing.tsx";
@@ -19,7 +18,6 @@ export function AppRoot() {
       const res = await sendToBrain({ type: "settings:get" });
       const personaId = res.type === "settings" ? res.settings.personaId : "consul";
       const p = await loadPersona(personaId);
-      applyTheme(p);
       setPersona(p);
       setSignedInState(await isSignedIn());
     })();
