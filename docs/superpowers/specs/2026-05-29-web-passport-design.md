@@ -369,17 +369,73 @@ is on the cut list but the server's shape anticipates it.
 
 ---
 
-## 12. Build stack
+## 12. Technology stack & project layout
 
-- Existing **Bun + TypeScript + MV3** scaffold (`extension/`).
-- Add: **offscreen document** for IndexedDB, **`chrome.alarms`** timers, the consul agent
-  module (Claude BYOK), checkpoint page, overlay content script, popup/settings.
-- A small **Bun** server for the centralized backend; v1 implements only the Calendar
-  **OAuth proxy** endpoint(s).
+**Two projects** in this repo:
+
+### `./extension` — the Chrome extension (MV3)
+- Existing **Bun + TypeScript + MV3** scaffold.
+- **React** (+ JSX) for the three UI surfaces: **checkpoint page**, **overlay**,
+  **popup/settings**. Bundled by the existing `Bun.build`.
+- The **service-worker brain stays vanilla TS** (no UI framework).
+- **IndexedDB** via a thin `idb` wrapper, accessed through an **offscreen document**.
+- **`chrome.alarms`** for all time-visas and break timers.
+- Claude (BYOK) via `fetch` to the Anthropic API; key stored locally only.
+
+### `./server` — the centralized backend + web (Next.js)
+- **Next.js (App Router)**, deployed on **Vercel** (mirror to a personal repo per the
+  root `README.md` deploy note).
+- Hosts: **landing page**, **persona marketplace** (browse / creators / upload — UX
+  modeled on `server/inspiration-codex-pet-share/src/gallery/*`), the **persona package
+  API**, and the **Calendar OAuth proxy** (holds the OAuth client secret).
+- **v1 implements only**: the Calendar OAuth-proxy route(s) and a route that serves
+  persona packages. Marketplace UI, uploads, backup/sync are cut-list (§2).
+- `server/inspiration-codex-pet-share/` is **read-only reference**, not part of the build.
 
 ---
 
-## 13. Glossary
+## 13. Persona packaging & installation
+
+**Hard platform constraint:** MV3 **forbids loading remote executable code**. Therefore a
+persona — and any future "plugin" — is **declarative data, never downloadable JavaScript.**
+This keeps the marketplace safe (no third-party code runs in the user's browser) and
+Web-Store-compliant. The **Brain interprets** these packages.
+
+### Persona Package format
+A persona is a self-describing package = **manifest JSON + image assets** (no code):
+```
+PersonaPackage {
+  manifest: Persona            // the §5 struct: id, name, systemPrompt, emotions[]
+  assets: {                    // referenced by the manifest
+    avatar: <image>
+    sprites: { [emotionState]: <image> }   // one per declared emotion
+  }
+}
+```
+On install the Brain **validates** the manifest against the `Persona` schema (every
+declared emotion has a sprite; required fields present), caches assets, and stores the
+persona in IndexedDB. An undeclared `emotion` emitted at runtime clamps to neutral (§10).
+
+### Installation paths
+- **v1 (demo-safe):**
+  - **Install-by-ID/URL** in extension Settings → extension `fetch`es the package from
+    `./server`, validates, caches assets, stores it.
+  - **Local-file import** of a package for authoring/testing.
+- **Designed-for (marketplace UX):** an **"Install" button on the web marketplace** that
+  messages the extension via **`externally_connectable`** (manifest lists the marketplace
+  origin) → extension fetches + validates the same package. (Web→extension adaptation of
+  the inspiration repo's `DownloadCommandRow` install affordance.)
+
+### Future "behavior plugins" (cut-list, but constrained now)
+Because remote code is forbidden, plugins that change consul behavior (strictness/
+temperature, extra rules, allowed-tool subsets, prompt fragments) must also be
+**declarative config the Brain interprets** — never executable code. v1 ships only the
+**negotiable** default behavior; the plugin format is not built yet but must follow this
+data-not-code rule.
+
+---
+
+## 14. Glossary
 
 - **Territory** — a domain (eTLD+1). Crossing into a new one needs a passport.
 - **Activity** — a unit of intent; exactly one is active at a time. Breaks are Activities too.
