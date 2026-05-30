@@ -17,7 +17,7 @@ export function AppRoot() {
   useEffect(() => {
     void (async () => {
       const res = await sendToBrain({ type: "settings:get" });
-      const personaId = res.type === "settings" ? res.settings.personaId : "monika";
+      const personaId = res.type === "settings" ? res.settings.personaId : "consul";
       const p = await loadPersona(personaId);
       applyTheme(p);
       setPersona(p);
