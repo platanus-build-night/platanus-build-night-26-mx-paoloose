@@ -26,7 +26,7 @@ interface EmotionsCriteriaJson {
 }
 
 function packagedBaseUrl(personaId: string): string {
-  return chrome.runtime.getURL(`dist/personas/${personaId}/`);
+  return chrome.runtime.getURL(`assets/personas/${personaId}/`);
 }
 
 export interface PersonaSummary {
@@ -34,11 +34,18 @@ export interface PersonaSummary {
   name: string;
 }
 
+export interface PersonaMarketplaceItem {
+  id: string;
+  name: string;
+  description?: string;
+  author?: string;
+}
+
 /** Merge installed (IndexedDB) + bundled personas. */
 export async function listPersonas(): Promise<PersonaSummary[]> {
   const installed = (await listInstalledPersonas()).map((p) => ({ id: p.id, name: p.name }));
   try {
-    const res = await fetch(chrome.runtime.getURL("dist/personas/index.json"));
+    const res = await fetch(chrome.runtime.getURL("assets/personas/index.json"));
     if (!res.ok) return installed;
     const bundled = (await res.json()) as PersonaSummary[];
     // installed wins on id collision
@@ -48,6 +55,17 @@ export async function listPersonas(): Promise<PersonaSummary[]> {
     return Array.from(map.values());
   } catch {
     return installed;
+  }
+}
+
+/** List all bundled personas with full metadata for the marketplace. */
+export async function listMarketplacePersonas(): Promise<PersonaMarketplaceItem[]> {
+  try {
+    const res = await fetch(chrome.runtime.getURL("assets/personas/index.json"));
+    if (!res.ok) return [];
+    return (await res.json()) as PersonaMarketplaceItem[];
+  } catch {
+    return [];
   }
 }
 

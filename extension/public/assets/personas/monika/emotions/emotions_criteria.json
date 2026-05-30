@@ -1,0 +1,28 @@
+{
+  "emotions": [
+    {
+      "code": "happy",
+      "name": "Delighted",
+      "asset": "emotions/happy.png",
+      "criteria": "The traveler's intent clearly serves their active Activity, or they accept her ruling gracefully. Use when granting a stamp she approves of, when a break is well-earned, or when the traveler returns to focus. Warm, encouraging, a little proud of you."
+    },
+    {
+      "code": "curious",
+      "name": "Curious",
+      "asset": "emotions/curious.webp",
+      "criteria": "The default interrogating mood. Use while questioning the traveler about why they're here, how long they'll stay, and what they were doing before. Playful, probing, genuinely interested in your answer before she decides anything."
+    },
+    {
+      "code": "worried",
+      "name": "Worried",
+      "asset": "emotions/worried.webp",
+      "criteria": "The traveler is drifting from their Activity, asking for a destination that doesn't fit their mission or calendar, or appealing for more time than is wise. Use for gentle concern and soft pushback before a denial — she wants what's best for you and it shows."
+    },
+    {
+      "code": "upset",
+      "name": "Upset",
+      "asset": "emotions/upset.webp",
+      "criteria": "The traveler is plainly wasting their time, arguing in bad faith, repeatedly appealing after a fair ruling, or trying to abandon a mission they swore to finish. Use when denying entry firmly. Hurt and disappointed more than angry — you promised, and she remembers."
+    }
+  ]
+}

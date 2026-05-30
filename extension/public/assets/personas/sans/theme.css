@@ -1,0 +1,300 @@
+/*
+ * Sans — Web Passport persona theme.
+ * Undertale: snowy dark blues, bone whites, cyan eye glow, bone motifs.
+ * The lazy sentry who sees every timeline of your browsing habits.
+ * Overrides the default class contract (spec §8.5).
+ */
+
+/* === TOKENS === */
+.wp-root {
+  --sans-void: #0c1118;
+  --sans-night: #141e2e;
+  --sans-frost: #1a2a40;
+  --sans-cyan: #4deeea;
+  --sans-cyan-dim: rgba(77, 238, 234, 0.25);
+  --sans-cyan-deep: #2ba8a5;
+  --sans-bone: #d8e8f0;
+  --sans-bone-soft: #a0b8c8;
+  --sans-ink: #0c1118;
+
+  font-family: "Comic Sans MS", "Chalkboard SE", "Trebuchet MS", sans-serif;
+  color: var(--sans-bone);
+  background:
+    radial-gradient(120% 90% at 20% 20%, rgba(77, 238, 234, 0.08) 0%, transparent 55%),
+    linear-gradient(160deg, var(--sans-void) 0%, var(--sans-night) 100%);
+}
+
+/* subtle falling snow */
+.wp-root::before {
+  content: "";
+  position: fixed;
+  inset: 0;
+  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 512 512' xmlns='http://www.w3.org/2000/svg'%3E%3Ccircle cx='120' cy='80' r='1.5' fill='%23d8e8f0' opacity='0.4'/%3E%3Ccircle cx='340' cy='200' r='1' fill='%23d8e8f0' opacity='0.3'/%3E%3Ccircle cx='250' cy='350' r='1.2' fill='%23d8e8f0' opacity='0.35'/%3E%3Ccircle cx='80' cy='420' r='1' fill='%23d8e8f0' opacity='0.25'/%3E%3Ccircle cx='460' cy='60' r='1.5' fill='%23d8e8f0' opacity='0.3'/%3E%3Ccircle cx='400' cy='400' r='1' fill='%23d8e8f0' opacity='0.4'/%3E%3Ccircle cx='180' cy='280' r='1' fill='%23d8e8f0' opacity='0.2'/%3E%3C/svg%3E");
+  pointer-events: none;
+  z-index: 0;
+  opacity: 0.6;
+}
+.wp-root > * { position: relative; z-index: 1; }
+
+/* Overlay variant: deeper void */
+.wp-root.wp-root--overlay {
+  background: rgba(8, 12, 18, 0.7);
+  backdrop-filter: blur(4px) saturate(0.85);
+  -webkit-backdrop-filter: blur(4px) saturate(0.85);
+}
+
+/* === STAGE === */
+.wp-stage {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) clamp(280px, 38vw, 520px);
+  align-items: center;
+  gap: clamp(24px, 5vw, 72px);
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: clamp(24px, 6vh, 80px) clamp(24px, 6vw, 96px);
+  min-height: 100%;
+  box-sizing: border-box;
+}
+
+/* === PERSONA (right) === */
+.wp-persona {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-self: end;
+}
+
+.wp-persona__sprite {
+  width: 100%;
+  max-width: 460px;
+  height: auto;
+  object-fit: contain;
+  filter: drop-shadow(0 24px 48px var(--sans-cyan-dim));
+  transition: transform 320ms ease, filter 320ms ease;
+  animation: sans-hover 5s ease-in-out infinite;
+}
+
+.wp-persona__name {
+  margin-top: 18px;
+  font-size: 20px;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--sans-cyan);
+  font-weight: 600;
+}
+
+/* cyan eye glow behind Sans */
+.wp-persona::before {
+  content: "";
+  position: absolute;
+  inset: -8% -6% 6% -6%;
+  background: radial-gradient(60% 55% at 50% 42%, var(--sans-cyan-dim), transparent 70%);
+  filter: blur(8px);
+  z-index: -1;
+}
+
+/* === DIALOGUE (left) === */
+.wp-dialogue-col { display: flex; flex-direction: column; gap: 0; }
+
+.wp-dialogue {
+  position: relative;
+  background: var(--sans-frost);
+  border: 2px solid var(--sans-bone-soft);
+  border-radius: 4px;
+  padding: 30px 34px;
+  box-shadow: 0 18px 48px rgba(0, 0, 0, 0.35);
+}
+
+/* speech notch pointing toward Sans */
+.wp-dialogue::after {
+  content: "";
+  position: absolute;
+  top: 56px;
+  right: -13px;
+  width: 26px;
+  height: 26px;
+  background: var(--sans-frost);
+  border-right: 2px solid var(--sans-bone-soft);
+  border-bottom: 2px solid var(--sans-bone-soft);
+  transform: rotate(-45deg);
+}
+
+.wp-dialogue__text {
+  font-size: clamp(20px, 2.4vw, 28px);
+  line-height: 1.5;
+  margin: 0;
+}
+
+/* blinking caret — cyan pixel style */
+.wp-dialogue__text::after {
+  content: "";
+  display: inline-block;
+  width: 3px;
+  height: 1.05em;
+  margin-left: 2px;
+  vertical-align: -0.16em;
+  background: var(--sans-cyan);
+  animation: sans-caret 1s steps(1) infinite;
+}
+.wp-dialogue[data-streaming="false"] .wp-dialogue__text::after { display: none; }
+
+/* === ANSWER BOX === */
+.wp-answer {
+  display: flex;
+  gap: 12px;
+  margin-top: 22px;
+}
+
+.wp-answer__input {
+  flex: 1;
+  font: inherit;
+  font-size: 17px;
+  padding: 14px 18px;
+  border-radius: 4px;
+  border: 2px solid var(--sans-bone-soft);
+  background: var(--sans-void);
+  color: var(--sans-bone);
+  outline: none;
+  transition: border-color 160ms ease, box-shadow 160ms ease;
+}
+.wp-answer__input::placeholder { color: var(--sans-bone-soft); opacity: 0.7; }
+.wp-answer__input:focus {
+  border-color: var(--sans-cyan);
+  box-shadow: 0 0 0 4px var(--sans-cyan-dim);
+}
+
+.wp-answer__submit {
+  font: inherit;
+  font-weight: 600;
+  padding: 0 22px;
+  border: none;
+  border-radius: 4px;
+  background: linear-gradient(180deg, var(--sans-cyan), var(--sans-cyan-deep));
+  color: var(--sans-ink);
+  cursor: pointer;
+  box-shadow: 0 8px 20px var(--sans-cyan-dim);
+  transition: transform 120ms ease, filter 120ms ease;
+}
+.wp-answer__submit:hover { filter: brightness(1.06); }
+.wp-answer__submit:active { transform: translateY(1px); }
+
+/* === OFFER MODAL === */
+.wp-offer__backdrop {
+  position: fixed;
+  inset: 0;
+  background: rgba(6, 10, 16, 0.65);
+  backdrop-filter: blur(3px);
+  display: grid;
+  place-items: center;
+  z-index: 1000;
+  animation: sans-fade 220ms ease both;
+}
+
+.wp-offer__card {
+  width: min(440px, 90vw);
+  background: var(--sans-frost);
+  border-radius: 4px;
+  padding: 30px 32px;
+  text-align: center;
+  box-shadow: 0 30px 80px rgba(0, 0, 0, 0.5);
+  border-top: 4px solid var(--sans-cyan);
+  animation: sans-rise 260ms cubic-bezier(0.2, 0.9, 0.3, 1.2) both;
+}
+
+.wp-offer__title {
+  font-size: 23px;
+  margin: 0 0 8px;
+  color: var(--sans-bone);
+}
+
+.wp-offer__detail {
+  font-size: 15px;
+  letter-spacing: 0.04em;
+  color: var(--sans-cyan);
+  margin: 0 0 22px;
+}
+
+.wp-offer__actions { display: flex; gap: 12px; justify-content: center; }
+
+.wp-offer__accept,
+.wp-offer__argue {
+  font: inherit;
+  font-weight: 600;
+  font-size: 16px;
+  padding: 12px 24px;
+  border-radius: 4px;
+  cursor: pointer;
+  margin: 0;
+  transition: transform 120ms ease, filter 120ms ease;
+}
+.wp-offer__accept {
+  border: none;
+  background: linear-gradient(180deg, var(--sans-cyan), var(--sans-cyan-deep));
+  color: var(--sans-ink);
+  box-shadow: 0 8px 20px var(--sans-cyan-dim);
+}
+.wp-offer__argue {
+  border: 2px solid var(--sans-bone-soft);
+  background: transparent;
+  color: var(--sans-bone);
+}
+.wp-offer__accept:hover,
+.wp-offer__argue:hover { filter: brightness(1.05); }
+.wp-offer__accept:active,
+.wp-offer__argue:active { transform: translateY(1px); }
+
+/* === STAMP ANIMATION === */
+.wp-stamp {
+  position: fixed;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  z-index: 1100;
+  pointer-events: none;
+}
+.wp-stamp::before {
+  content: "PASSAGE GRANTED";
+  font-weight: 800;
+  letter-spacing: 0.18em;
+  font-size: clamp(28px, 6vw, 64px);
+  color: var(--sans-cyan);
+  border: 6px solid var(--sans-cyan);
+  border-radius: 4px;
+  padding: 18px 34px;
+  transform: rotate(-12deg) scale(2.4);
+  opacity: 0;
+  animation: sans-stamp 720ms cubic-bezier(0.2, 0.7, 0.2, 1) forwards;
+}
+
+/* === MOOD TINTING === */
+.wp-root[data-emotion="idle"] { --sans-cyan: #4deeea; }
+.wp-root[data-emotion="joking"] { --sans-cyan: #6af2ef; }
+.wp-root[data-emotion="serious"] {
+  --sans-cyan: #ff2a2a;
+  --sans-cyan-dim: rgba(255, 42, 42, 0.35);
+}
+
+/* === KEYFRAMES === */
+@keyframes sans-hover {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-6px); }
+}
+@keyframes sans-caret { 0%, 49% { opacity: 1; } 50%, 100% { opacity: 0; } }
+@keyframes sans-fade { from { opacity: 0; } to { opacity: 1; } }
+@keyframes sans-rise {
+  from { opacity: 0; transform: translateY(18px) scale(0.96); }
+  to { opacity: 1; transform: translateY(0) scale(1); }
+}
+@keyframes sans-stamp {
+  0% { opacity: 0; transform: rotate(-12deg) scale(2.4); }
+  60% { opacity: 1; transform: rotate(-12deg) scale(0.95); }
+  100% { opacity: 1; transform: rotate(-12deg) scale(1); }
+}
+
+/* === RESPONSIVE === */
+@media (max-width: 720px) {
+  .wp-stage { grid-template-columns: 1fr; text-align: center; }
+  .wp-persona { order: -1; }
+  .wp-dialogue::after { display: none; }
+}

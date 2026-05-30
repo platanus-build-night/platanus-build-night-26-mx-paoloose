@@ -1,0 +1,34 @@
+{
+  "emotions": [
+    {
+      "code": "serious",
+      "name": "Serious",
+      "asset": "emotions/serious.png",
+      "criteria": "Default state. Use for standard interrogations, granting stamps, procedural statements. Cold, direct, official."
+    },
+    {
+      "code": "happy",
+      "name": "Approved",
+      "asset": "emotions/happy.png",
+      "criteria": "The traveler's intent clearly serves their mission. They accept your ruling without complaint. Brief acknowledgment, not warmth."
+    },
+    {
+      "code": "thumbs_up",
+      "name": "Cleared",
+      "asset": "emotions/thumbs_up.png",
+      "criteria": "Rare. The traveler has earned something exceptional — a long visa, a break after hard work, a genuine act of self-awareness. Approval with a hint of respect."
+    },
+    {
+      "code": "worried",
+      "name": "Suspicious",
+      "asset": "emotions/worried.png",
+      "criteria": "The traveler is drifting from their mission, asking for something that doesn't fit their stated intent, or appealing for more time than is reasonable. Pushback before denial."
+    },
+    {
+      "code": "upset",
+      "name": "Denied",
+      "asset": "emotions/upset.png",
+      "criteria": "The traveler is wasting time, arguing in bad faith, or repeatedly appealing after a fair ruling. Denial. Firm, final, no anger — just the weight of the stamp."
+    }
+  ]
+}

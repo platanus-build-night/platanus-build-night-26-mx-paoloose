@@ -11,22 +11,27 @@
 
 const watch = process.argv.includes("--watch");
 
-const entrypoints = [
+const esmEntrypoints = [
   "./src/service-worker.ts",
   "./src/offscreen.ts",
+];
+
+const iifeEntrypoints = [
   "./src/checkpoint.tsx",
   "./src/popup.tsx",
   "./src/app.tsx",
+  "./src/overlay.tsx",
 ];
 
-// Copy bundled persona packages into dist/personas/ so the extension can fetch
-// them at runtime (the default persona ships inside the extension). Source of
-// truth is the repo-root personas/ folder.
+// Copy bundled persona packages into dist/personas/ and dist/assets/personas/
+// so the extension can fetch them at runtime. Source of truth is public/assets/personas/.
 async function copyPersonas() {
   const { cp, mkdir, readdir, writeFile } = await import("node:fs/promises");
-  const src = "../personas";
+  const src = "./public/assets/personas";
   const dest = "./dist/personas";
+  const assetsDest = "./dist/assets/personas";
   await mkdir(dest, { recursive: true });
+  await mkdir(assetsDest, { recursive: true });
   let names: string[] = [];
   try {
     names = (await readdir(src, { withFileTypes: true }))
@@ -35,19 +40,21 @@ async function copyPersonas() {
   } catch {
     return [];
   }
-  const index: Array<{ id: string; name: string }> = [];
+  const index: Array<{ id: string; name: string; description?: string; author?: string }> = [];
   for (const name of names) {
-    // Skip personas without a manifest (e.g. an empty work-in-progress folder).
     if (!(await Bun.file(`${src}/${name}/persona.json`).exists())) continue;
     await cp(`${src}/${name}`, `${dest}/${name}`, { recursive: true });
+    await cp(`${src}/${name}`, `${assetsDest}/${name}`, { recursive: true });
     const manifest = (await Bun.file(`${src}/${name}/persona.json`).json()) as {
       id: string;
       name: string;
+      description?: string;
+      author?: string;
     };
-    index.push({ id: manifest.id, name: manifest.name });
+    index.push(manifest);
   }
-  // An index of installed/bundled personas, for the popup switcher.
   await writeFile(`${dest}/index.json`, JSON.stringify(index, null, 2));
+  await writeFile(`${assetsDest}/index.json`, JSON.stringify(index, null, 2));
   return index;
 }
 
@@ -55,33 +62,29 @@ async function copyPersonas() {
 const WEBPASSPORT_ENV = process.env.WEBPASSPORT_ENV ?? "debug";
 
 async function build() {
-  const result = await Bun.build({
-    entrypoints,
+  // 1. ESM: service worker + offscreen (must be modules)
+  const esm = await Bun.build({
+    entrypoints: esmEntrypoints,
     outdir: "./dist",
     target: "browser",
     format: "esm",
-    splitting: true,
-    naming: {
-      entry: "[name].[ext]",
-      chunk: "[name]-[hash].[ext]",
-    },
+    naming: "[name].[ext]",
     minify: false,
     sourcemap: "inline",
     define: {
       "process.env.WEBPASSPORT_ENV": JSON.stringify(WEBPASSPORT_ENV),
     },
   });
-
-  if (!result.success) {
-    console.error("Build failed:");
-    for (const log of result.logs) console.error(log);
+  if (!esm.success) {
+    console.error("ESM build failed:");
+    for (const log of esm.logs) console.error(log);
     if (!watch) process.exit(1);
     return;
   }
-  // The overlay is a CONTENT SCRIPT — content scripts can't be ESM, so it gets
-  // its own IIFE bundle.
-  const overlay = await Bun.build({
-    entrypoints: ["./src/overlay.tsx"],
+
+  // 2. IIFE: UI pages + overlay. IIFE deduplicates React across deps correctly.
+  const iife = await Bun.build({
+    entrypoints: iifeEntrypoints,
     outdir: "./dist",
     target: "browser",
     format: "iife",
@@ -92,16 +95,16 @@ async function build() {
       "process.env.WEBPASSPORT_ENV": JSON.stringify(WEBPASSPORT_ENV),
     },
   });
-  if (!overlay.success) {
-    console.error("Overlay build failed:");
-    for (const log of overlay.logs) console.error(log);
+  if (!iife.success) {
+    console.error("IIFE build failed:");
+    for (const log of iife.logs) console.error(log);
     if (!watch) process.exit(1);
     return;
   }
 
   const index = await copyPersonas();
   console.log(
-    `Build complete (${result.outputs.length + overlay.outputs.length} outputs, ${index?.length ?? 0} personas, env=${WEBPASSPORT_ENV})`,
+    `Build complete (${esm.outputs.length + iife.outputs.length} outputs, ${index?.length ?? 0} personas, env=${WEBPASSPORT_ENV})`,
   );
 }
 

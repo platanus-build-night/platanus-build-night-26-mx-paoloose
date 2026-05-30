@@ -1,0 +1,321 @@
+/*
+ * The Consul — Web Passport persona theme.
+ * Papers Please aesthetic: 1980s Eastern Bloc border checkpoint.
+ * Dark, cold, fluorescent-tube lighting, muted red and gray, concrete textures.
+ * Overrides the default class contract (spec §8.5).
+ */
+
+@font-face {
+  font-family: "ConsulMono";
+  src: url("../../../assets/fonts/GeistMono-Regular.woff2") format("woff2");
+  font-weight: 400;
+  font-style: normal;
+}
+
+.wp-root {
+  --csl-bg: #1a1a1e;
+  --csl-surface: #222228;
+  --csl-border: #3a3a42;
+  --csl-fg: #d4d0c8;
+  --csl-muted: #7a7870;
+  --csl-accent: #c4a86a;
+  --csl-red: #8b3a3a;
+  --csl-red-bright: #c45050;
+  --csl-green: #6a9a6a;
+
+  font-family: "ConsulMono", "Courier New", monospace;
+  color: var(--csl-fg);
+  background: var(--csl-bg);
+  letter-spacing: 0.03em;
+}
+
+/* fluorescent tube flicker + concrete grain */
+.wp-root::before {
+  content: "";
+  position: fixed;
+  inset: 0;
+  background:
+    repeating-linear-gradient(
+      0deg,
+      transparent,
+      transparent 2px,
+      rgba(255, 255, 240, 0.008) 2px,
+      rgba(255, 255, 240, 0.008) 4px
+    ),
+    url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.8' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.05'/%3E%3C/svg%3E");
+  pointer-events: none;
+  z-index: 0;
+}
+.wp-root > * { position: relative; z-index: 1; }
+
+/* Overlay: dark translucent, page bleeds through */
+.wp-root.wp-root--overlay {
+  background: rgba(10, 10, 14, 0.80);
+  backdrop-filter: blur(5px) saturate(0.7);
+  -webkit-backdrop-filter: blur(5px) saturate(0.7);
+}
+
+/* === STAGE === */
+.wp-stage {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) clamp(200px, 28vw, 380px);
+  align-items: stretch;
+  gap: 0;
+  max-width: 1000px;
+  margin: 0 auto;
+  padding: 48px;
+  min-height: 100%;
+  box-sizing: border-box;
+}
+
+/* === PERSONA (right) === */
+.wp-persona {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: flex-end;
+  padding: 0 0 0 40px;
+  gap: 14px;
+}
+
+.wp-persona__sprite {
+  width: 100%;
+  max-width: 340px;
+  height: auto;
+  object-fit: contain;
+  filter: contrast(1.1) brightness(0.95) drop-shadow(0 8px 24px rgba(0, 0, 0, 0.6));
+  transition: transform 300ms ease;
+}
+
+.wp-persona__name {
+  font-size: 10px;
+  letter-spacing: 0.35em;
+  text-transform: uppercase;
+  color: var(--csl-muted);
+  padding: 6px 0;
+  border-top: 1px solid var(--csl-border);
+  border-bottom: 1px solid var(--csl-border);
+  width: 100%;
+  text-align: center;
+}
+
+/* === DIALOGUE (left) === */
+.wp-dialogue-col { display: flex; flex-direction: column; gap: 0; }
+
+.wp-dialogue {
+  background: transparent;
+  border: none;
+  padding: 0 0 28px;
+  position: relative;
+}
+
+/* separator line under dialogue */
+.wp-dialogue::after {
+  content: "";
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  width: 100%;
+  height: 1px;
+  background: linear-gradient(to right, var(--csl-red) 0%, var(--csl-border) 30%, transparent 100%);
+}
+
+.wp-dialogue__text {
+  font-size: clamp(16px, 1.6vw, 20px);
+  line-height: 1.65;
+  margin: 0;
+  color: var(--csl-fg);
+  letter-spacing: 0.02em;
+}
+
+/* typewriter cursor */
+.wp-dialogue__text::after {
+  content: "▌";
+  display: inline;
+  color: var(--csl-red-bright);
+  animation: csl-blink 700ms steps(1) infinite;
+  margin-left: 2px;
+  font-weight: 400;
+}
+.wp-dialogue[data-streaming="false"] .wp-dialogue__text::after { display: none; }
+
+/* === ANSWER BOX === */
+.wp-answer {
+  display: flex;
+  gap: 0;
+  margin-top: 18px;
+  border: 1px solid var(--csl-border);
+  background: var(--csl-surface);
+}
+
+.wp-answer__input {
+  flex: 1;
+  font: inherit;
+  font-size: 14px;
+  padding: 12px 14px;
+  background: transparent;
+  border: none;
+  color: var(--csl-fg);
+  outline: none;
+  letter-spacing: inherit;
+}
+.wp-answer__input::placeholder { color: var(--csl-muted); }
+.wp-answer__input:focus { color: #fff; }
+
+.wp-answer__submit {
+  font: inherit;
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.25em;
+  text-transform: uppercase;
+  padding: 0 18px;
+  border: none;
+  border-left: 1px solid var(--csl-border);
+  background: var(--csl-red);
+  color: var(--csl-fg);
+  cursor: pointer;
+  transition: background 150ms ease;
+}
+.wp-answer__submit:hover { background: var(--csl-red-bright); color: #fff; }
+.wp-answer__submit:disabled { opacity: 0.3; cursor: default; }
+
+/* === OFFER MODAL === */
+.wp-offer__backdrop {
+  position: fixed;
+  inset: 0;
+  background: rgba(5, 5, 8, 0.85);
+  backdrop-filter: blur(6px);
+  -webkit-backdrop-filter: blur(6px);
+  display: grid;
+  place-items: center;
+  z-index: 1000;
+  animation: csl-fade 200ms ease both;
+}
+
+.wp-offer__card {
+  width: min(440px, 90vw);
+  background: var(--csl-surface);
+  border: 1px solid var(--csl-border);
+  border-radius: 0;
+  padding: 32px 36px;
+  text-align: left;
+  box-shadow: 0 40px 80px rgba(0, 0, 0, 0.8);
+  position: relative;
+  animation: csl-rise 240ms cubic-bezier(0.15, 0.8, 0.3, 1.2) both;
+}
+
+/* red stamp mark top-left of card */
+.wp-offer__card::before {
+  content: "◆";
+  position: absolute;
+  top: -10px;
+  left: 32px;
+  font-size: 20px;
+  color: var(--csl-red-bright);
+  background: var(--csl-bg);
+  padding: 0 6px;
+  line-height: 1;
+}
+
+.wp-offer__title {
+  font-size: 18px;
+  margin: 0 0 4px;
+  color: var(--csl-fg);
+  line-height: 1.4;
+}
+
+.wp-offer__detail {
+  font-size: 10px;
+  letter-spacing: 0.25em;
+  text-transform: uppercase;
+  color: var(--csl-accent);
+  margin: 0 0 24px;
+  padding-bottom: 20px;
+  border-bottom: 1px solid var(--csl-border);
+}
+
+.wp-offer__actions { display: flex; gap: 10px; }
+
+.wp-offer__accept,
+.wp-offer__argue {
+  font: inherit;
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  padding: 10px 18px;
+  cursor: pointer;
+  border-radius: 0;
+  margin: 0;
+  transition: all 150ms ease;
+}
+.wp-offer__accept {
+  border: 1px solid var(--csl-red);
+  background: var(--csl-red);
+  color: var(--csl-fg);
+}
+.wp-offer__accept:hover { background: var(--csl-red-bright); border-color: var(--csl-red-bright); color: #fff; }
+.wp-offer__argue {
+  border: 1px solid var(--csl-border);
+  background: transparent;
+  color: var(--csl-muted);
+}
+.wp-offer__argue:hover { border-color: var(--csl-muted); color: var(--csl-fg); }
+
+/* === STAMP === */
+.wp-stamp {
+  position: fixed;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  z-index: 1100;
+  pointer-events: none;
+  background: rgba(5, 5, 8, 0.5);
+}
+.wp-stamp::before {
+  content: "PASSAGE GRANTED";
+  font-size: clamp(18px, 3.5vw, 48px);
+  font-weight: 900;
+  letter-spacing: 0.3em;
+  text-transform: uppercase;
+  color: var(--csl-red-bright);
+  border: 3px solid var(--csl-red-bright);
+  padding: 16px 40px;
+  transform: rotate(-8deg) scale(2.6);
+  opacity: 0;
+  animation: csl-stamp 550ms cubic-bezier(0.2, 0.6, 0.2, 1) forwards;
+}
+
+/* === MOOD === */
+.wp-root[data-emotion="happy"] { --csl-red: #6a8a6a; }
+.wp-root[data-emotion="thumbs_up"] { --csl-red: #5a9a5a; --csl-red-bright: #7ab87a; }
+.wp-root[data-emotion="worried"] { --csl-red: #a07040; --csl-red-bright: #c89050; }
+.wp-root[data-emotion="upset"] { --csl-red: #b03030; --csl-red-bright: #e04040; }
+
+/* === KEYFRAMES === */
+@keyframes csl-blink { 0%, 49% { opacity: 1; } 50%, 100% { opacity: 0; } }
+@keyframes csl-fade { from { opacity: 0; } to { opacity: 1; } }
+@keyframes csl-rise {
+  from { opacity: 0; transform: translateY(16px) scale(0.98); }
+  to { opacity: 1; transform: translateY(0) scale(1); }
+}
+@keyframes csl-stamp {
+  0% { opacity: 0; transform: rotate(-8deg) scale(2.6); }
+  55% { opacity: 1; transform: rotate(-8deg) scale(0.9); }
+  100% { opacity: 1; transform: rotate(-8deg) scale(1); }
+}
+
+/* === RESPONSIVE === */
+@media (max-width: 680px) {
+  .wp-stage {
+    grid-template-columns: 1fr;
+    padding: 32px 20px;
+    gap: 20px;
+  }
+  .wp-persona {
+    order: -1;
+    padding: 0;
+    border: none;
+  }
+  .wp-persona__name { display: none; }
+}

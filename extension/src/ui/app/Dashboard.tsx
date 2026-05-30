@@ -4,12 +4,12 @@
 
 import { useEffect, useMemo, useState, useCallback } from "react";
 import type { Activity, PassportActivity, Persona, Settings } from "../../types.ts";
-import { restEmotion, spriteFor, installPersonaById } from "../../shared/persona.ts";
+import { restEmotion, spriteFor, installPersonaById, listMarketplacePersonas, type PersonaMarketplaceItem } from "../../shared/persona.ts";
 import { sendToBrain } from "../shared/messaging.ts";
-import { setSignedIn } from "./auth.ts";
 
-type Tab = "dashboard" | "passport" | "configure";
-const TABS: Tab[] = ["dashboard", "passport", "configure"];
+
+type Tab = "dashboard" | "passport" | "marketplace" | "configure";
+const TABS: Tab[] = ["dashboard", "passport", "marketplace", "configure"];
 
 function initialTab(): Tab {
   const t = new URLSearchParams(location.search).get("tab") as Tab | null;
@@ -76,13 +76,13 @@ export function Dashboard({ persona }: { persona: Persona }) {
           <span className="wp-dash__brand-text">{persona.name}</span>
         </div>
         <nav className="wp-dash__tabs">
-          {(["dashboard", "passport", "configure"] as Tab[]).map((t) => (
+          {(["dashboard", "passport", "marketplace", "configure"] as Tab[]).map((t) => (
             <button
               key={t}
               className={`wp-dash__tab ${tab === t ? "is-active" : ""}`}
               onClick={() => setTab(t)}
             >
-              {t === "dashboard" ? "Dashboard" : t === "passport" ? "Your passport" : "Configure"}
+              {t === "dashboard" ? "Dashboard" : t === "passport" ? "Your passport" : t === "marketplace" ? "Consulate" : "Configure"}
             </button>
           ))}
         </nav>
@@ -130,6 +130,7 @@ export function Dashboard({ persona }: { persona: Persona }) {
             </>
           )}
           {tab === "passport" && <Passport activities={activities} />}
+          {tab === "marketplace" && <Marketplace />}
           {tab === "configure" && <Configure />}
         </div>
 
@@ -241,7 +242,6 @@ function Configure() {
 
   async function resetAll() {
     await sendToBrain({ type: "settings:set", patch: { apiKey: null, apiBaseUrl: null, model: null, enabled: true } });
-    await setSignedIn(false);
     location.reload();
   }
 
@@ -367,6 +367,37 @@ function Configure() {
           Reset Web Passport
         </button>
       </section>
+    </div>
+  );
+}
+
+function Marketplace() {
+  const [personas, setPersonas] = useState<PersonaMarketplaceItem[]>([]);
+
+  useEffect(() => {
+    void (async () => {
+      const list = await listMarketplacePersonas();
+      setPersonas(list);
+    })();
+  }, []);
+
+  return (
+    <div className="wp-marketplace">
+      <h2 className="wp-marketplace__title">The Consulate</h2>
+      <p className="wp-marketplace__subtitle">Browse available consuls. All are pre-installed and ready to guard your borders.</p>
+      <div className="wp-marketplace__grid">
+        {personas.map((p) => (
+          <div className="wp-marketplace__card" key={p.id}>
+            <div className="wp-marketplace__card-header">
+              <h3 className="wp-marketplace__card-name">{p.name}</h3>
+              <span className="wp-marketplace__card-id">{p.id}</span>
+            </div>
+            {p.description && <p className="wp-marketplace__card-desc">{p.description}</p>}
+            {p.author && <p className="wp-marketplace__card-author">by {p.author}</p>}
+          </div>
+        ))}
+      </div>
+      {personas.length === 0 && <p className="wp-empty">The consulate is empty.</p>}
     </div>
   );
 }

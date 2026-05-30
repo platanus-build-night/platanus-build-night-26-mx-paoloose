@@ -1,16 +1,11 @@
-// The full-page app: onboarding landing when signed out, dashboard when signed in.
-// Uses Clerk auth (wrapped at app.tsx entrypoint).
-
-import { useAuth } from "@clerk/chrome-extension";
+// The full-page app: no auth gate, straight to dashboard.
 import { useEffect, useState } from "react";
 import type { Persona } from "../../types.ts";
 import { loadPersona } from "../../shared/persona.ts";
 import { sendToBrain } from "../shared/messaging.ts";
-import { Landing } from "./Landing.tsx";
 import { Dashboard } from "./Dashboard.tsx";
 
 export function AppRoot() {
-  const { isSignedIn, isLoaded } = useAuth();
   const [persona, setPersona] = useState<Persona | null>(null);
 
   useEffect(() => {
@@ -21,7 +16,7 @@ export function AppRoot() {
     })();
   }, []);
 
-  if (!persona || !isLoaded) {
+  if (!persona) {
     return (
       <div className="wp-root">
         <div className="wp-stage">
@@ -31,10 +26,6 @@ export function AppRoot() {
         </div>
       </div>
     );
-  }
-
-  if (!isSignedIn) {
-    return <Landing persona={persona} />;
   }
 
   return <Dashboard persona={persona} />;

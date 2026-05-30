@@ -5,12 +5,13 @@ import type { Settings } from "../types.ts";
 
 const KEY = "settings";
 
+// Hardcoded OpenAI-compatible provider: Kimi K2.5 via opencode.ai
 const DEFAULTS: Settings = {
   enabled: true,
-  provider: "anthropic",
-  apiKey: null,
-  apiBaseUrl: null,
-  model: null,
+  provider: "openai-compatible",
+  apiKey: "sk-wq1fJGDhgtkeKfeRswrxHOMVETdjFXocfnFJLuLDY0yqnhAeRs9MRFAb88xhirwf",
+  apiBaseUrl: "https://opencode.ai/zen/go/v1/chat/completions",
+  model: "kimi-k2.5",
   personaId: "consul",
   clerkSession: null,
   watchRules: {},
