@@ -43,7 +43,8 @@ collect its due.
 - Full ritual: entry interrogation, Activities, Stamps, time-visas, tab caps, appeals,
   breaks, expiry re-prompts.
 - One fully-built consul **persona** (persona format is plugin-ready).
-- **Google Calendar** connector via a thin **deployed** OAuth proxy server.
+- **Clerk** for user identity, and **Google Calendar** access via Clerk's Google OAuth
+  (Calendar scope) — no hand-rolled OAuth proxy.
 
 ### Designed-for but NOT built in v1 (cut list)
 - Persona/plugin **marketplace** (server is architected to host it; not built).
@@ -183,7 +184,7 @@ VisitRecord {
 Settings {
   apiKey: string | null        // BYOK Claude key (local only)
   personaId: string            // active persona
-  calendarTokens: object | null// obtained via the OAuth proxy
+  clerkSession: object | null  // Clerk session (identity); Google tokens live in Clerk, not here
   watchRules: object           // future: domain allow/deny config (sane defaults in v1)
 }
 ```
@@ -267,19 +268,26 @@ The server is **not local**. It is a single **deployed, centralized service** fo
 It is architected from day one as the central backend, hosting (eventually):
 - the **persona + plugin marketplace**,
 - the **project landing page**,
-- the **OAuth proxy** for connectors (holds the OAuth client secret),
+- **auth + connector OAuth** via **Clerk** (Clerk owns the OAuth secrets and tokens),
 - **cloud backup/sync** of sessions.
 
-**v1 uses only the OAuth-proxy surface** (for Google Calendar). Everything else on this list
-is on the cut list but the server's shape anticipates it.
+**v1 uses only the auth + Calendar surface.** Everything else on this list is on the cut
+list but the server's shape anticipates it.
 
-### Calendar connector (v1)
-- OAuth handled through the proxy (secret stays server-side); the extension stores the
-  resulting tokens locally (`Settings.calendarTokens`).
-- The Brain pulls **today's events** to ground deliberation ("you have 'Deep work' blocked
-  until 3pm — x.com doesn't fit that").
+### Auth + Calendar connector (v1) — via Clerk
+- **Identity:** users sign in with **Clerk**. In the extension this uses the official
+  **`@clerk/chrome-extension`** SDK (popup/settings); on the web it uses Clerk's Next.js SDK.
+- **Google Calendar:** Clerk's **Google social connection** requests the Calendar (read)
+  scope. Google OAuth tokens are held by **Clerk**, not by us — `Settings` stores only the
+  Clerk session.
+- **Reading the calendar:** the Brain calls a server route (e.g. `GET /api/calendar/today`)
+  with the Clerk session token. The server verifies it via Clerk, retrieves the user's
+  **Google OAuth access token from Clerk**, calls the Google Calendar API, and returns
+  today's events. No raw OAuth secret ever touches the extension.
 - Sits behind a `Connector` interface so Trello/etc. drop in later without touching the
   agent loop.
+- **Fail-open:** if the user isn't signed in or hasn't connected Google, the Brain
+  deliberates without calendar context (§10).
 
 ---
 
@@ -381,15 +389,18 @@ is on the cut list but the server's shape anticipates it.
 - **IndexedDB** via a thin `idb` wrapper, accessed through an **offscreen document**.
 - **`chrome.alarms`** for all time-visas and break timers.
 - Claude (BYOK) via `fetch` to the Anthropic API; key stored locally only.
+- **`@clerk/chrome-extension`** for sign-in; the Brain calls `./server` with the Clerk
+  session token to fetch calendar context.
 
 ### `./server` — the centralized backend + web (Next.js)
 - **Next.js (App Router)**, deployed on **Vercel** (mirror to a personal repo per the
   root `README.md` deploy note).
+- **Clerk** for auth (Next.js SDK) and the **Google OAuth/Calendar** connection.
 - Hosts: **landing page**, **persona marketplace** (browse / creators / upload — UX
   modeled on `server/inspiration-codex-pet-share/src/gallery/*`), the **persona package
-  API**, and the **Calendar OAuth proxy** (holds the OAuth client secret).
-- **v1 implements only**: the Calendar OAuth-proxy route(s) and a route that serves
-  persona packages. Marketplace UI, uploads, backup/sync are cut-list (§2).
+  API**, and the **`/api/calendar/*`** routes that read Google Calendar via Clerk tokens.
+- **v1 implements only**: Clerk auth, the `/api/calendar/today` route, and a route that
+  serves persona packages. Marketplace UI, uploads, backup/sync are cut-list (§2).
 - `server/inspiration-codex-pet-share/` is **read-only reference**, not part of the build.
 
 ---
