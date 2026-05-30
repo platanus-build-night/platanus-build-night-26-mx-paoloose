@@ -96,6 +96,46 @@ export async function getOrCreateBreakActivity(): Promise<Activity> {
   return breakActivity;
 }
 
+/**
+ * Start a break: activate the break Activity, set its expiry, pause any other
+ * active Activity, and schedule the auto-end alarm.
+ */
+export async function startBreak(minutes: number): Promise<Activity> {
+  const database = await db();
+  const tx = database.transaction("activities", "readwrite");
+  const store = tx.objectStore("activities");
+
+  // Pause current active(s)
+  const actives = await store.index("by-status").getAll("active");
+  for (const a of actives) {
+    if (a.id !== BREAK_ID) await store.put({ ...a, status: "paused" });
+  }
+
+  // Reuse or create break activity
+  let breakAct = await store.get(BREAK_ID);
+  if (!breakAct) {
+    breakAct = {
+      id: BREAK_ID,
+      title: "Break",
+      description: "Rest period granted by the consul.",
+      status: "active",
+      createdAt: now(),
+      expiresAt: now() + minutes * 60_000,
+      consulNotes: "",
+    };
+  } else {
+    breakAct = { ...breakAct, status: "active", expiresAt: now() + minutes * 60_000 };
+  }
+  await store.put(breakAct);
+  await tx.done;
+  return breakAct;
+}
+
+export async function isOnBreak(): Promise<boolean> {
+  const active = await getActiveActivity();
+  return active?.id === BREAK_ID && active.expiresAt != null && active.expiresAt > now();
+}
+
 // ---- Stamps ----
 
 export async function writeStamp(stamp: Stamp): Promise<void> {

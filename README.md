@@ -1,18 +1,17 @@
-# Paolo Luis Flores Cóngora — Platanus Build Night — Ciudad de México Project
+# Web passport
 
-**Current project logo:** project-logo.png
+```
+Paolo Luis Flores Cóngora — Platanus Build Night — Ciudad de México Project
+```
 
-<img src="./project-logo.png" alt="Project Logo" width="200" />
+<div align="center">
+<img align="center" src="./project-logo.png" alt="Project Logo" width="300" />
+</div>
 
 Hacker:
 
 - Paolo Luis Flores Cóngora ([@paoloose](https://github.com/paoloose))
 
-Before submitting:
-
-- ✅ Set a project name, oneliner and description in build-night-project.json
-- ✅ Provide a 1000x1000 png project logo, max 500kb (project-logo.png)
-- ✅ Provide a concise and to the point readme
 
 ## ⚠️ Deploying (Vercel, Render, etc.)
 

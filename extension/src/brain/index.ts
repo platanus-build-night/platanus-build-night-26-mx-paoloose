@@ -14,6 +14,7 @@ import {
   getPassport,
   getStamp,
   setActiveActivity,
+  startBreak,
 } from "./state.ts";
 import type { ContentMessage } from "../ui/shared/messaging.ts";
 
@@ -32,12 +33,12 @@ async function handleAlarm(name: string): Promise<void> {
     if (stamp) await summonOnDomain(stamp.domain, "expiry");
   } else if (name.startsWith("break:")) {
     const breakId = name.slice("break:".length);
-    // Break over: pause it, restore the most recent non-break paused activity
+    // Break over: mark it done, restore the most recent non-break paused activity
     const { db: getDb } = await import("./db.ts");
     const database = await getDb();
     const breakAct = await database.get("activities", breakId);
-    if (breakAct) {
-      await database.put("activities", { ...breakAct, status: "paused", expiresAt: null });
+    if (breakAct && breakAct.status === "active") {
+      await database.put("activities", { ...breakAct, status: "done", expiresAt: null });
     }
     const all = await database.getAll("activities");
     const prev = all
@@ -97,6 +98,12 @@ async function handle(
     case "activity:setActive":
       await setActiveActivity(req.id);
       return { type: "ok" };
+
+    case "activity:startBreak": {
+      const breakAct = await startBreak(req.minutes);
+      chrome.alarms.create(`break:${breakAct.id}`, { when: breakAct.expiresAt! });
+      return { type: "ok" };
+    }
 
     case "overlay:check": {
       const decision = await decideForUrl(req.url, sender.tab?.id ?? null);

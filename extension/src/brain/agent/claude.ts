@@ -7,8 +7,8 @@ import { buildTools } from "./tools.ts";
 import { buildMessages, buildSystemPrompt } from "./prompt.ts";
 import { neutralEmotion } from "../../shared/persona.ts";
 
-const API_URL = "https://api.anthropic.com/v1/messages";
-const MODEL = "claude-haiku-4-5-20251001"; // fast: the page is blocked while we wait
+const DEFAULT_URL = "https://api.anthropic.com/v1/messages";
+const DEFAULT_MODEL = "claude-haiku-4-5-20251001"; // fast: the page is blocked while we wait
 const TOOL_NAMES = new Set<ConsulTool>([
   "say",
   "offer_stamp",
@@ -30,11 +30,15 @@ function validEmotion(ctx: DeliberationContext, raw: unknown): string {
   return ctx.persona.emotions.some((e) => e.code === code) ? code : neutralEmotion(ctx.persona);
 }
 
-export function makeClaudeDeliberate(apiKey: string): Deliberate {
+export function makeClaudeDeliberate(
+  apiKey: string,
+  baseUrl?: string,
+  model?: string,
+): Deliberate {
   return async (ctx, transcript): Promise<Turn> => {
     const tools = buildTools(ctx.persona.emotions.map((e) => e.code));
     const body = {
-      model: MODEL,
+      model: model || DEFAULT_MODEL,
       max_tokens: 600,
       system: buildSystemPrompt(ctx),
       messages: buildMessages(ctx, transcript),
@@ -42,7 +46,7 @@ export function makeClaudeDeliberate(apiKey: string): Deliberate {
       tool_choice: { type: "any" as const },
     };
 
-    const res = await fetch(API_URL, {
+    const res = await fetch(baseUrl || DEFAULT_URL, {
       method: "POST",
       headers: {
         "content-type": "application/json",

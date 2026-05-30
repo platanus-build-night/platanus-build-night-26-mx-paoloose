@@ -15,18 +15,30 @@ function openApp(tab?: "dashboard" | "passport" | "configure") {
   window.close();
 }
 
+function fmtBreakLeft(expiresAt: number): string {
+  const left = Math.max(0, expiresAt - Date.now());
+  const m = Math.floor(left / 60000);
+  const s = Math.floor((left % 60000) / 1000);
+  return `${String(m).padStart(2, "0")}:${String(s).padStart(2, "0")}`;
+}
+
 export function App() {
-  const { isSignedIn, isLoaded } = useAuth();
+  const { isSignedIn, isLoaded, getToken } = useAuth();
   const { user } = useUser();
   const [settings, setSettings] = useState<Settings | null>(null);
   const [persona, setPersona] = useState<Persona | null>(null);
   const [personaList, setPersonaList] = useState<PersonaSummary[]>([]);
   const [activities, setActivities] = useState<PassportActivity[]>([]);
   const [changing, setChanging] = useState(false);
+  const [breakLeft, setBreakLeft] = useState<string | null>(null);
 
   useEffect(() => {
     if (!isSignedIn) return;
     void (async () => {
+      // Sync Clerk token to storage so the Brain can call the server
+      const token = await getToken();
+      await chrome.storage.local.set({ clerkToken: token ?? null });
+
       const s = await sendToBrain({ type: "settings:get" });
       if (s.type === "settings") {
         setSettings(s.settings);
@@ -34,9 +46,42 @@ export function App() {
       }
       setPersonaList(await listPersonas());
       const p = await sendToBrain({ type: "data:passport" });
-      if (p.type === "passport") setActivities(p.activities.filter((a) => a.status !== "done"));
+      if (p.type === "passport") {
+        const acts = p.activities.filter((a) => a.status !== "done");
+        setActivities(acts);
+        const active = acts.find((a) => a.status === "active");
+        if (active?.id === "__break__" && active.expiresAt) {
+          setBreakLeft(fmtBreakLeft(active.expiresAt));
+        }
+      }
     })();
   }, [isSignedIn]);
+
+  useEffect(() => {
+    if (!breakLeft) return;
+    const active = activities.find((a) => a.status === "active");
+    if (active?.id !== "__break__" || !active.expiresAt) {
+      setBreakLeft(null);
+      return;
+    }
+    const id = setInterval(() => {
+      const left = fmtBreakLeft(active.expiresAt!);
+      setBreakLeft(left);
+      if (left === "00:00") {
+        clearInterval(id);
+        void (async () => {
+          const p = await sendToBrain({ type: "data:passport" });
+          if (p.type === "passport") {
+            const acts = p.activities.filter((a) => a.status !== "done");
+            setActivities(acts);
+            const a = acts.find((x) => x.status === "active");
+            if (a?.id !== "__break__") setBreakLeft(null);
+          }
+        })();
+      }
+    }, 1000);
+    return () => clearInterval(id);
+  }, [breakLeft, activities]);
 
   async function patch(p: Partial<Settings>) {
     await sendToBrain({ type: "settings:set", patch: p });
@@ -53,7 +98,16 @@ export function App() {
     if (!id) return;
     await sendToBrain({ type: "activity:setActive", id });
     const p = await sendToBrain({ type: "data:passport" });
-    if (p.type === "passport") setActivities(p.activities.filter((a) => a.status !== "done"));
+    if (p.type === "passport") {
+      const acts = p.activities.filter((a) => a.status !== "done");
+      setActivities(acts);
+      const active = acts.find((a) => a.status === "active");
+      if (active?.id === "__break__" && active.expiresAt) {
+        setBreakLeft(fmtBreakLeft(active.expiresAt));
+      } else {
+        setBreakLeft(null);
+      }
+    }
   }
 
   if (!isLoaded) return <div className="wp-pop" />;
@@ -74,6 +128,7 @@ export function App() {
 
   // ---- Signed in ----
   const activeId = activities.find((a) => a.status === "active")?.id ?? "";
+  const onBreak = activeId === "__break__";
 
   return (
     <div className="wp-pop">
@@ -112,7 +167,13 @@ export function App() {
         <div className="wp-pop__activity-now" data-none={String(activeId === "")}>
           {activities.find((a) => a.id === activeId)?.title ?? "No activity"}
         </div>
-        {activities.length > 0 && (
+        {onBreak && breakLeft && (
+          <div className="wp-pop__break">
+            <span className="wp-pop__break-label">BREAK</span>
+            <span className="wp-pop__break-digits">{breakLeft}</span>
+          </div>
+        )}
+        {activities.length > 0 && !onBreak && (
           <select value={activeId} onChange={(e) => void switchActivity(e.target.value)}>
             <option value="" disabled>
               Switch activity…

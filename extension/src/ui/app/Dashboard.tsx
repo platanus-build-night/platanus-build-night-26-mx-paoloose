@@ -2,9 +2,9 @@
 // Tabs: Dashboard (stats) / Your Passport (activities + stamps) / Configure.
 // Always uses the default dark style — persona theme.css is for interrogation only.
 
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useState, useCallback } from "react";
 import type { Activity, PassportActivity, Persona, Settings } from "../../types.ts";
-import { restEmotion, spriteFor } from "../../shared/persona.ts";
+import { restEmotion, spriteFor, installPersonaById } from "../../shared/persona.ts";
 import { sendToBrain } from "../shared/messaging.ts";
 import { setSignedIn } from "./auth.ts";
 
@@ -26,32 +26,45 @@ function fmtClock(ts: number): string {
   return new Date(ts).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
 }
 
+const BREAK_MINUTES = [10, 15, 20, 30];
+
 export function Dashboard({ persona }: { persona: Persona }) {
   const [tab, setTab] = useState<Tab>(initialTab);
   const [activities, setActivities] = useState<PassportActivity[] | null>(null);
+  const [showBreakPicker, setShowBreakPicker] = useState(false);
 
-  useEffect(() => {
-    void (async () => {
-      const res = await sendToBrain({ type: "data:passport" });
-      if (res.type === "passport") setActivities(res.activities);
-    })();
+  const refresh = useCallback(async () => {
+    const res = await sendToBrain({ type: "data:passport" });
+    if (res.type === "passport") setActivities(res.activities);
   }, []);
 
-  const { activeTitle, activeActivity, activities: activityCount, stamps, territories, grantedMs } = useMemo(() => {
+  useEffect(() => {
+    void refresh();
+  }, [refresh]);
+
+  const { activeTitle, activeActivity, onBreak, activities: activityCount, stamps, territories, grantedMs } = useMemo(() => {
     const acts = activities ?? [];
     const allStamps = acts.flatMap((a) => a.stamps);
     const terrs = new Set(allStamps.map((s) => s.domain));
     const granted = allStamps.reduce((sum, s) => sum + (s.expiresAt - s.grantedAt), 0);
     const active = acts.find((a) => a.status === "active");
+    const breakNow = active?.id === "__break__" && active.expiresAt != null;
     return {
       activeTitle: active?.title ?? "Nothing yet",
       activeActivity: active ?? null,
+      onBreak: breakNow,
       activities: acts.filter((a) => a.status !== "done").length,
       stamps: allStamps.length,
       territories: terrs.size,
       grantedMs: granted,
     };
   }, [activities]);
+
+  async function startBreak(minutes: number) {
+    await sendToBrain({ type: "activity:startBreak", minutes });
+    setShowBreakPicker(false);
+    await refresh();
+  }
 
   const sprite = spriteFor(persona, restEmotion(persona));
 
@@ -86,9 +99,33 @@ export function Dashboard({ persona }: { persona: Persona }) {
                 <StatCard value={String(territories)} label="Territories visited" />
                 <StatCard value={fmtMinutes(grantedMs)} label="Time granted" />
               </div>
-              {activeActivity?.title === "Break" && activeActivity.expiresAt && (
+
+              {onBreak && activeActivity?.expiresAt ? (
                 <BreakTimer expiresAt={activeActivity.expiresAt} />
+              ) : (
+                <div className="wp-break-action">
+                  {!showBreakPicker ? (
+                    <button className="wp-break-action__btn" onClick={() => setShowBreakPicker(true)}>
+                      Take a Break
+                    </button>
+                  ) : (
+                    <div className="wp-break-action__picker">
+                      <span className="wp-break-action__label">How long?</span>
+                      <div className="wp-break-action__opts">
+                        {BREAK_MINUTES.map((m) => (
+                          <button key={m} className="wp-break-action__opt" onClick={() => void startBreak(m)}>
+                            {m}m
+                          </button>
+                        ))}
+                      </div>
+                      <button className="wp-break-action__cancel" onClick={() => setShowBreakPicker(false)}>
+                        Cancel
+                      </button>
+                    </div>
+                  )}
+                </div>
               )}
+
               {activities === null && <p className="wp-empty">Reading your passport…</p>}
             </>
           )}
@@ -169,7 +206,12 @@ function Passport({ activities }: { activities: PassportActivity[] | null }) {
 function Configure() {
   const [settings, setSettings] = useState<Settings | null>(null);
   const [apiKey, setApiKey] = useState("");
+  const [baseUrl, setBaseUrl] = useState("");
+  const [model, setModel] = useState("");
   const [saved, setSaved] = useState(false);
+  const [installId, setInstallId] = useState("");
+  const [installing, setInstalling] = useState(false);
+  const [installMsg, setInstallMsg] = useState("");
 
   useEffect(() => {
     void (async () => {
@@ -177,6 +219,8 @@ function Configure() {
       if (res.type === "settings") {
         setSettings(res.settings);
         setApiKey(res.settings.apiKey ?? "");
+        setBaseUrl(res.settings.apiBaseUrl ?? "");
+        setModel(res.settings.model ?? "");
       }
     })();
   }, []);
@@ -186,39 +230,134 @@ function Configure() {
     setSettings((prev) => (prev ? { ...prev, ...p } : prev));
   }
 
+  async function saveProvider() {
+    await patch({
+      apiKey: apiKey || null,
+      apiBaseUrl: baseUrl || null,
+      model: model || null,
+    });
+    setSaved(true);
+  }
+
   async function resetAll() {
-    await sendToBrain({ type: "settings:set", patch: { apiKey: null, enabled: true } });
+    await sendToBrain({ type: "settings:set", patch: { apiKey: null, apiBaseUrl: null, model: null, enabled: true } });
     await setSignedIn(false);
     location.reload();
   }
 
+  async function handleInstall() {
+    if (!installId.trim()) return;
+    setInstalling(true);
+    setInstallMsg("");
+    try {
+      await installPersonaById(installId.trim());
+      setInstallMsg(`Installed "${installId.trim()}" successfully.`);
+      setInstallId("");
+    } catch (err) {
+      setInstallMsg(`Install failed: ${err instanceof Error ? err.message : String(err)}`);
+    } finally {
+      setInstalling(false);
+    }
+  }
+
   if (!settings) return <p className="wp-empty">Loading settings…</p>;
+
+  const provider = settings.provider;
 
   return (
     <div className="wp-configure">
       <section className="wp-configure__section">
-        <h3>Anthropic API key</h3>
-        <p className="wp-configure__hint">Your key stays local. Blank = the demo consul (mock).</p>
+        <h3>AI Provider</h3>
+        <div className="wp-configure__row" style={{ flexWrap: "wrap" }}>
+          {(["anthropic", "anthropic-compatible", "openai-compatible"] as const).map((p) => (
+            <label key={p} className="wp-configure__radio">
+              <input
+                type="radio"
+                name="provider"
+                checked={provider === p}
+                onChange={() => {
+                  setSaved(false);
+                  void patch({ provider: p });
+                }}
+              />
+              <span>{p === "anthropic" ? "Anthropic" : p === "anthropic-compatible" ? "Anthropic-compatible" : "OpenAI-compatible"}</span>
+            </label>
+          ))}
+        </div>
+        <p className="wp-configure__hint">All calls are local from your browser.</p>
+      </section>
+
+      <section className="wp-configure__section">
+        <h3>API key</h3>
         <div className="wp-configure__row">
           <input
             type="password"
             value={apiKey}
-            placeholder="sk-ant-…"
+            placeholder="sk-…"
             onChange={(e) => {
               setApiKey(e.target.value);
               setSaved(false);
             }}
           />
-          <button
-            className="wp-configure__btn"
-            onClick={async () => {
-              await patch({ apiKey: apiKey || null });
-              setSaved(true);
-            }}
-          >
-            {saved ? "✓" : "Save"}
+        </div>
+      </section>
+
+      {provider !== "anthropic" && (
+        <section className="wp-configure__section">
+          <h3>Base URL</h3>
+          <div className="wp-configure__row">
+            <input
+              type="text"
+              value={baseUrl}
+              placeholder={provider === "openai-compatible" ? "https://api.openai.com/v1" : "https://api.anthropic.com"}
+              onChange={(e) => {
+                setBaseUrl(e.target.value);
+                setSaved(false);
+              }}
+            />
+          </div>
+        </section>
+      )}
+
+      {provider !== "anthropic" && (
+        <section className="wp-configure__section">
+          <h3>Model</h3>
+          <div className="wp-configure__row">
+            <input
+              type="text"
+              value={model}
+              placeholder={provider === "openai-compatible" ? "gpt-4o" : "claude-3-haiku-…"}
+              onChange={(e) => {
+                setModel(e.target.value);
+                setSaved(false);
+              }}
+            />
+          </div>
+        </section>
+      )}
+
+      <section className="wp-configure__section">
+        <button className="wp-configure__btn" onClick={() => void saveProvider()}>
+          {saved ? "✓ Saved" : "Save"}
+        </button>
+      </section>
+
+      <section className="wp-configure__section">
+        <h3>Install persona</h3>
+        <p className="wp-configure__hint">Fetch a persona package from the marketplace server by ID.</p>
+        <div className="wp-configure__row">
+          <input
+            type="text"
+            value={installId}
+            placeholder="e.g. monika"
+            onChange={(e) => setInstallId(e.target.value)}
+            disabled={installing}
+          />
+          <button className="wp-configure__btn" onClick={() => void handleInstall()} disabled={installing}>
+            {installing ? "…" : "Install"}
           </button>
         </div>
+        {installMsg && <p className="wp-configure__hint">{installMsg}</p>}
       </section>
 
       <section className="wp-configure__section">

@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { ClerkProvider } from "@clerk/nextjs";
+import "./globals.css";
 
 export const metadata: Metadata = {
   title: "Web Passport",
@@ -14,16 +15,7 @@ export default function RootLayout({
   return (
     <ClerkProvider>
       <html lang="en">
-        <body
-          style={{
-            margin: 0,
-            fontFamily: "system-ui, sans-serif",
-            background: "#0f1020",
-            color: "#f4f4f8",
-          }}
-        >
-          {children}
-        </body>
+        <body>{children}</body>
       </html>
     </ClerkProvider>
   );

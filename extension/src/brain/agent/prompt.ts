@@ -29,6 +29,15 @@ export function buildSystemPrompt(ctx: DeliberationContext): string {
     ? ctx.recentVisits.map((v) => `  - ${v.domain}`).join("\n")
     : "  (no recent history on record)";
 
+  const calendar =
+    ctx.calendarEvents === null
+      ? "  (calendar not connected)"
+      : ctx.calendarEvents.length === 0
+        ? "  (no events today)"
+        : ctx.calendarEvents
+            .map((e) => `  - ${e.title} (${e.start} → ${e.end})`)
+            .join("\n");
+
   const situation =
     ctx.mode === "expiry"
       ? `The traveler's visa for ${ctx.domain} has just EXPIRED — they are still on the page. Confront them: time's up. They must leave, or make a real case for more.`
@@ -44,6 +53,9 @@ ${situation}
 Their current Activity (the one thing they're supposed to be doing): ${activity}
 Recently visited territories:
 ${visits}
+
+Today's calendar:
+${calendar}
 
 # How you must respond
 You respond with EXACTLY ONE tool call per turn. This is an ask-answer checkpoint, not a chat:

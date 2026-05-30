@@ -17,6 +17,7 @@ export type BrainRequest =
   | { type: "data:passport" }
   // Activity control
   | { type: "activity:setActive"; id: string }
+  | { type: "activity:startBreak"; minutes: number }
   // Overlay (in-page consul)
   | { type: "overlay:check"; url: string }
   | { type: "overlay:fallback"; url: string };

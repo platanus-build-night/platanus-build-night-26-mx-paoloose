@@ -2,5 +2,7 @@ node_modules
 dist
 .vscode/
 
+*local-command*
+
 # Reference-only nested repo (has its own .git)
 server/inspiration-codex-pet-share/

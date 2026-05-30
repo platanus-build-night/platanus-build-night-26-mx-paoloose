@@ -7,7 +7,10 @@ const KEY = "settings";
 
 const DEFAULTS: Settings = {
   enabled: true,
+  provider: "anthropic",
   apiKey: null,
+  apiBaseUrl: null,
+  model: null,
   personaId: "consul",
   clerkSession: null,
   watchRules: {},

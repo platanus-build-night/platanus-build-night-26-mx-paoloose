@@ -7,6 +7,7 @@ import { deliberatorFor, type DeliberationContext } from "./agent/index.ts";
 import { isProposal } from "./agent/tools.ts";
 import { getSettings } from "./settings.ts";
 import { loadPersona } from "../shared/persona.ts";
+import { fetchTodayCalendar } from "./connectors/calendar.ts";
 import {
   appendTurn,
   createSession,
@@ -39,6 +40,7 @@ async function buildContext(session: CheckpointSession): Promise<DeliberationCon
     persona,
     activeActivity: await getActiveActivity(),
     recentVisits: await recentVisits(8),
+    calendarEvents: await fetchTodayCalendar(),
   };
 }
 

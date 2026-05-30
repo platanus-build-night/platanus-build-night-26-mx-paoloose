@@ -258,6 +258,79 @@
   font-variant-numeric: tabular-nums;
 }
 
+/* break action (dashboard button + picker) */
+.wp-break-action {
+  margin-top: 20px;
+  max-width: 820px;
+}
+.wp-break-action__btn {
+  font: inherit;
+  font-weight: 700;
+  font-size: 11px;
+  letter-spacing: 0.15em;
+  text-transform: uppercase;
+  padding: 12px 24px;
+  border: 1px solid var(--wp-accent);
+  background: transparent;
+  color: var(--wp-accent);
+  cursor: pointer;
+  transition: all 150ms ease;
+}
+.wp-break-action__btn:hover {
+  background: var(--wp-accent);
+  color: var(--wp-bg);
+}
+.wp-break-action__picker {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
+  padding: 14px;
+  background: var(--wp-surface);
+  border: 1px solid var(--wp-border);
+}
+.wp-break-action__label {
+  font-size: 11px;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--wp-muted);
+}
+.wp-break-action__opts {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+.wp-break-action__opt {
+  font: inherit;
+  font-weight: 700;
+  font-size: 11px;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  padding: 8px 14px;
+  border: 1px solid var(--wp-border);
+  background: var(--wp-bg);
+  color: var(--wp-fg);
+  cursor: pointer;
+  transition: all 150ms ease;
+}
+.wp-break-action__opt:hover {
+  border-color: var(--wp-accent);
+  color: var(--wp-accent);
+}
+.wp-break-action__cancel {
+  font: inherit;
+  font-size: 10px;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  padding: 8px 12px;
+  border: 1px solid transparent;
+  background: transparent;
+  color: var(--wp-muted);
+  cursor: pointer;
+  margin-left: auto;
+}
+.wp-break-action__cancel:hover { color: var(--wp-fg); }
+
 /* Configure tab */
 .wp-configure {
   max-width: 520px;
@@ -306,3 +379,31 @@
 .wp-configure__btn:hover { background: #fff; border-color: #fff; }
 .wp-configure__btn--danger { border-color: var(--wp-red); background: var(--wp-red); color: var(--wp-fg); }
 .wp-configure__btn--danger:hover { background: var(--wp-red-bright); border-color: var(--wp-red-bright); }
+
+.wp-configure__radio {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 12px;
+  color: var(--wp-fg);
+  cursor: pointer;
+  padding: 6px 0;
+}
+.wp-configure__radio input {
+  appearance: none;
+  width: 14px;
+  height: 14px;
+  border: 1px solid var(--wp-border);
+  background: var(--wp-bg);
+  cursor: pointer;
+  position: relative;
+}
+.wp-configure__radio input:checked {
+  border-color: var(--wp-accent);
+}
+.wp-configure__radio input:checked::after {
+  content: "";
+  position: absolute;
+  inset: 2px;
+  background: var(--wp-accent);
+}

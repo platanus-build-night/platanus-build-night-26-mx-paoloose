@@ -70,11 +70,19 @@ export interface VisitRecord {
   activityId: string | null;
 }
 
+export type ApiProvider = "anthropic" | "anthropic-compatible" | "openai-compatible";
+
 export interface Settings {
   /** Global on/off for consul gating (debug toggle; defaults on). */
   enabled: boolean;
-  /** BYOK Claude key (local only) */
+  /** API provider */
+  provider: ApiProvider;
+  /** BYOK API key (local only) */
   apiKey: string | null;
+  /** Override base URL for compatible APIs */
+  apiBaseUrl: string | null;
+  /** Override model name for compatible APIs */
+  model: string | null;
   /** active persona id */
   personaId: string;
   /** Clerk session (identity); Google tokens live in Clerk, not here */

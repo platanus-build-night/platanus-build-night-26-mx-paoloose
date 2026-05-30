@@ -150,6 +150,30 @@ select:focus,
   text-decoration: underline;
 }
 
+/* break timer in popup */
+.wp-pop__break {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-top: 8px;
+  padding: 8px 10px;
+  background: var(--pop-bg);
+  border: 1px solid var(--pop-accent);
+}
+.wp-pop__break-label {
+  font-size: 9px;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  color: var(--pop-accent);
+}
+.wp-pop__break-digits {
+  font-size: 14px;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  color: var(--pop-fg);
+  font-variant-numeric: tabular-nums;
+}
+
 /* bottom actions */
 .wp-pop__actions { display: flex; gap: 8px; }
 .wp-pop__action {
