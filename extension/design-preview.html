@@ -1,0 +1,127 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Web Passport — Design Preview</title>
+  <style>
+    /* Reset + page chrome (not part of the extension) */
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+      background: #111;
+      font-family: system-ui, sans-serif;
+      color: #ccc;
+    }
+    .preview-nav {
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      z-index: 9999;
+      display: flex;
+      gap: 8px;
+      padding: 12px 20px;
+      background: rgba(0,0,0,0.85);
+      backdrop-filter: blur(8px);
+    }
+    .preview-nav button {
+      padding: 8px 18px;
+      border: 1px solid #333;
+      border-radius: 8px;
+      background: #1a1a1a;
+      color: #ccc;
+      font-size: 13px;
+      cursor: pointer;
+      font-weight: 600;
+    }
+    .preview-nav button.active {
+      background: #fff;
+      color: #111;
+      border-color: #fff;
+    }
+    .preview-frame {
+      display: none;
+      width: 100vw;
+      height: 100vh;
+      border: none;
+    }
+    .preview-frame.active { display: block; }
+
+    /* Fake page behind the overlay for demo purposes */
+    .fake-page {
+      background: #f0f0f0;
+      min-height: 100vh;
+      padding: 80px 40px 40px;
+    }
+    .fake-page h1 { font-size: 48px; color: #333; margin-bottom: 20px; }
+    .fake-page p { font-size: 18px; color: #666; max-width: 600px; line-height: 1.6; }
+    .fake-page .card {
+      background: #fff;
+      border-radius: 12px;
+      padding: 24px;
+      margin-top: 24px;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+      max-width: 600px;
+    }
+  </style>
+</head>
+<body>
+  <nav class="preview-nav">
+    <button class="active" onclick="show('noir')">Bureaucratic Noir</button>
+    <button onclick="show('monika')">Monika (DDLC)</button>
+  </nav>
+
+  <!-- Default Noir -->
+  <iframe class="preview-frame active" id="noir" srcdoc='
+    <link rel="stylesheet" href="default.css" />
+    <div class="wp-root wp-root--overlay">
+      <div class="wp-stage">
+        <div class="wp-dialogue-col">
+          <div class="wp-dialogue" data-streaming="true">
+            <p class="wp-dialogue__text">So — twitter.com. And what exactly do you need over there? Tell me why, and how long you'\''ll be.</p>
+          </div>
+          <div class="wp-answer">
+            <input class="wp-answer__input" placeholder="State your case…" />
+            <button class="wp-answer__submit">Answer</button>
+          </div>
+        </div>
+        <div class="wp-persona">
+          <div class="wp-persona__name">Consul</div>
+        </div>
+      </div>
+    </div>
+  '></iframe>
+
+  <!-- Monika -->
+  <iframe class="preview-frame" id="monika" srcdoc='
+    <link rel="stylesheet" href="default.css" />
+    <link rel="stylesheet" href="dist/personas/monika/theme.css" />
+    <div class="wp-root wp-root--overlay" data-emotion="curious">
+      <div class="wp-stage">
+        <div class="wp-dialogue-col">
+          <div class="wp-dialogue" data-streaming="false">
+            <p class="wp-dialogue__text">Oh — hello. A new traveler, and you came right to me. I like that.</p>
+          </div>
+          <div class="wp-answer">
+            <input class="wp-answer__input" placeholder="State your case…" />
+            <button class="wp-answer__submit">Answer</button>
+          </div>
+        </div>
+        <div class="wp-persona">
+          <div class="wp-persona__sprite" style="width:200px;height:280px;background:linear-gradient(135deg,#f5b8d0,#c44f7b);border-radius:16px;display:flex;align-items:center;justify-content:center;color:#fff;font-size:48px;">🎭</div>
+          <div class="wp-persona__name">Monika</div>
+        </div>
+      </div>
+    </div>
+  '></iframe>
+
+  <script>
+    function show(name) {
+      document.querySelectorAll('.preview-frame').forEach(f => f.classList.remove('active'));
+      document.querySelectorAll('.preview-nav button').forEach(b => b.classList.remove('active'));
+      document.getElementById(name).classList.add('active');
+      event.target.classList.add('active');
+    }
+  </script>
+</body>
+</html>

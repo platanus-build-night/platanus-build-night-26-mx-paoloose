@@ -1,21 +1,21 @@
 /*
  * Monika — Web Passport persona theme.
- * Overrides the (deliberately boring) default checkpoint/overlay styles via the
- * stable class contract (see spec §8.5). Persona sits on the right; the consul's
- * single streamed line and the answer box sit on the left; the offer prompt rises
- * as a modal over a dimmed backdrop.
- *
- * Doki Doki aesthetic: soft cream paper, club pinks, plum ink, a literary serif.
+ * Doki Doki Literature Club: warm paper, club pinks, plum ink, literary serif.
+ * The consul who knows your tabs, your calendar, and the promises you made yourself.
+ * Overrides the default class contract (spec §8.5).
  */
 
+/* === TOKENS === */
 .wp-root {
   --mnk-cream: #fff6f1;
   --mnk-paper: #fffdfb;
   --mnk-pink: #c44f7b;
   --mnk-pink-soft: #f5b8d0;
   --mnk-pink-glow: rgba(196, 79, 123, 0.35);
+  --mnk-pink-deep: #8a2050;
   --mnk-ink: #3a2330;
   --mnk-ink-soft: #7a5d6b;
+  --mnk-gold: #c8a85c;
 
   font-family: "Iowan Old Style", "Palatino Linotype", Palatino, Georgia, serif;
   color: var(--mnk-ink);
@@ -24,7 +24,25 @@
     linear-gradient(160deg, var(--mnk-cream) 0%, #ffeef4 100%);
 }
 
-/* dialogue (left) + persona (right) */
+/* subtle paper grain */
+.wp-root::before {
+  content: "";
+  position: fixed;
+  inset: 0;
+  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)' opacity='0.03'/%3E%3C/svg%3E");
+  pointer-events: none;
+  z-index: 0;
+}
+.wp-root > * { position: relative; z-index: 1; }
+
+/* Overlay variant: dimmed page, Monika's warmth still visible */
+.wp-root.wp-root--overlay {
+  background: rgba(30, 14, 24, 0.65);
+  backdrop-filter: blur(4px) saturate(0.85);
+  -webkit-backdrop-filter: blur(4px) saturate(0.85);
+}
+
+/* === STAGE === */
 .wp-stage {
   display: grid;
   grid-template-columns: minmax(0, 1fr) clamp(280px, 38vw, 520px);
@@ -37,7 +55,7 @@
   box-sizing: border-box;
 }
 
-/* ---- persona portrait (right) ---- */
+/* === PERSONA (right) === */
 .wp-persona {
   position: relative;
   display: flex;
@@ -65,7 +83,7 @@
   font-weight: 600;
 }
 
-/* a soft halo behind her that warms/cools with mood */
+/* soft halo behind Monika, warms/cools with mood */
 .wp-persona::before {
   content: "";
   position: absolute;
@@ -75,7 +93,9 @@
   z-index: -1;
 }
 
-/* ---- dialogue (left) ---- */
+/* === DIALOGUE (left) === */
+.wp-dialogue-col { display: flex; flex-direction: column; gap: 0; }
+
 .wp-dialogue {
   position: relative;
   background: var(--mnk-paper);
@@ -83,9 +103,15 @@
   border-radius: 20px;
   padding: 30px 34px;
   box-shadow: 0 18px 48px rgba(58, 35, 48, 0.12);
+  /* subtle inner highlight like pressed paper */
+  background-image: linear-gradient(
+    180deg,
+    rgba(255, 255, 255, 0.6) 0%,
+    transparent 30%
+  );
 }
 
-/* a little speech notch pointing toward Monika */
+/* speech notch pointing toward Monika */
 .wp-dialogue::after {
   content: "";
   position: absolute;
@@ -105,7 +131,7 @@
   margin: 0;
 }
 
-/* blinking caret while the line streams in */
+/* blinking caret while the line streams */
 .wp-dialogue__text::after {
   content: "";
   display: inline-block;
@@ -118,7 +144,7 @@
 }
 .wp-dialogue[data-streaming="false"] .wp-dialogue__text::after { display: none; }
 
-/* ---- answer box ("chat prompt") ---- */
+/* === ANSWER BOX === */
 .wp-answer {
   display: flex;
   gap: 12px;
@@ -158,7 +184,7 @@
 .wp-answer__submit:hover { filter: brightness(1.06); }
 .wp-answer__submit:active { transform: translateY(1px); }
 
-/* ---- offer modal (on top of everything) ---- */
+/* === OFFER MODAL === */
 .wp-offer__backdrop {
   position: fixed;
   inset: 0;
@@ -194,6 +220,8 @@
   margin: 0 0 22px;
 }
 
+.wp-offer__actions { display: flex; gap: 12px; justify-content: center; }
+
 .wp-offer__accept,
 .wp-offer__argue {
   font: inherit;
@@ -202,7 +230,7 @@
   padding: 12px 24px;
   border-radius: 13px;
   cursor: pointer;
-  margin: 0 6px;
+  margin: 0;
   transition: transform 120ms ease, filter 120ms ease;
 }
 .wp-offer__accept {
@@ -221,7 +249,7 @@
 .wp-offer__accept:active,
 .wp-offer__argue:active { transform: translateY(1px); }
 
-/* ---- stamp animation ---- */
+/* === STAMP ANIMATION === */
 .wp-stamp {
   position: fixed;
   inset: 0;
@@ -244,7 +272,7 @@
   animation: mnk-stamp 720ms cubic-bezier(0.2, 0.7, 0.2, 1) forwards;
 }
 
-/* ---- mood tinting via data-emotion on .wp-root ---- */
+/* === MOOD TINTING === */
 .wp-root[data-emotion="worried"] { --mnk-pink: #b56aa0; }
 .wp-root[data-emotion="upset"] {
   --mnk-pink: #9c3f6a;
@@ -252,7 +280,7 @@
 }
 .wp-root[data-emotion="happy"] { --mnk-pink: #e0729f; }
 
-/* ---- keyframes ---- */
+/* === KEYFRAMES === */
 @keyframes mnk-breathe {
   0%, 100% { transform: translateY(0); }
   50% { transform: translateY(-10px); }
@@ -269,6 +297,7 @@
   100% { opacity: 1; transform: rotate(-12deg) scale(1); }
 }
 
+/* === RESPONSIVE === */
 @media (max-width: 720px) {
   .wp-stage { grid-template-columns: 1fr; text-align: center; }
   .wp-persona { order: -1; }

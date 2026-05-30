@@ -1,156 +1,260 @@
 /*
  * Web Passport — DEFAULT checkpoint/overlay styles.
- * Deliberately plain. Personas override these via theme.css against this stable
- * class contract (spec §8.5). Structure here; personality there.
+ * Bureauocratic noir. You are dealing with authority. Cold precision.
+ * Personas override via theme.css against this stable class contract.
  */
 
+/* === TOKENS === */
 .wp-root {
-  --wp-bg: #1c1c22;
-  --wp-fg: #e8e8ee;
-  --wp-muted: #9a9aa6;
-  --wp-accent: #6b7cff;
-  --wp-card: #26262e;
-  --wp-border: #3a3a44;
+  --wp-bg: #0b0d11;
+  --wp-fg: #d8dde8;
+  --wp-muted: #5a6072;
+  --wp-accent: #c8d4ff;
+  --wp-card: #12151d;
+  --wp-border: #252a38;
+  --wp-red: #e85c5c;
+  --wp-amber: #e8b85c;
 
   position: fixed;
   inset: 0;
   background: var(--wp-bg);
   color: var(--wp-fg);
-  font-family: system-ui, -apple-system, sans-serif;
+  font-family: "Courier New", Courier, monospace;
   overflow: auto;
+  letter-spacing: 0.02em;
 }
 
-/*
- * Overlay variant — used when the consul is injected on top of a live page
- * (entry + mid-session interruptions). Transparent black so the page shows
- * through, dimmed. Two classes → beats a persona's `.wp-root { background }`.
- */
+/* subtle noise grain over the whole surface */
+.wp-root::before {
+  content: "";
+  position: fixed;
+  inset: 0;
+  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)' opacity='0.04'/%3E%3C/svg%3E");
+  pointer-events: none;
+  z-index: 0;
+}
+.wp-root > * { position: relative; z-index: 1; }
+
+/* Overlay: translucent dark, page bleeds through */
 .wp-root.wp-root--overlay {
-  background: rgba(8, 6, 12, 0.62);
-  backdrop-filter: blur(3px);
-  -webkit-backdrop-filter: blur(3px);
+  background: rgba(5, 6, 10, 0.78);
+  backdrop-filter: blur(4px);
+  -webkit-backdrop-filter: blur(4px);
 }
 
+/* === STAGE === */
 .wp-stage {
   display: grid;
-  grid-template-columns: minmax(0, 1fr) clamp(240px, 34vw, 460px);
-  align-items: center;
-  gap: 48px;
-  max-width: 1100px;
+  grid-template-columns: minmax(0, 1fr) clamp(220px, 30vw, 400px);
+  align-items: stretch;
+  gap: 0;
+  max-width: 960px;
   margin: 0 auto;
-  padding: 64px 48px;
+  padding: 48px;
   min-height: 100%;
   box-sizing: border-box;
+  border-left: 1px solid var(--wp-border);
 }
 
-/* persona portrait (right) */
+/* === PERSONA (right) === */
 .wp-persona {
   display: flex;
   flex-direction: column;
   align-items: center;
-  justify-self: end;
-}
-.wp-persona__sprite {
-  width: 100%;
-  max-width: 420px;
-  height: auto;
-  object-fit: contain;
-}
-.wp-persona__name {
-  margin-top: 14px;
-  font-size: 17px;
-  letter-spacing: 0.12em;
-  text-transform: uppercase;
-  color: var(--wp-muted);
+  justify-content: flex-end;
+  padding: 0 0 0 48px;
+  border-left: 1px solid var(--wp-border);
+  gap: 16px;
 }
 
-/* dialogue (left) */
-.wp-dialogue {
-  background: var(--wp-card);
-  border: 1px solid var(--wp-border);
-  border-radius: 14px;
-  padding: 26px 28px;
+.wp-persona__sprite {
+  width: 100%;
+  max-width: 360px;
+  height: auto;
+  object-fit: contain;
+  /* cinematic vignette */
+  filter: contrast(1.05) saturate(0.9);
 }
+
+.wp-persona__name {
+  font-size: 11px;
+  letter-spacing: 0.3em;
+  text-transform: uppercase;
+  color: var(--wp-muted);
+  padding-bottom: 4px;
+  border-bottom: 1px solid var(--wp-border);
+  width: 100%;
+  text-align: center;
+}
+
+/* === DIALOGUE (left) === */
+.wp-dialogue-col { display: flex; flex-direction: column; gap: 0; }
+
+.wp-dialogue {
+  background: transparent;
+  border: none;
+  padding: 0 0 32px;
+  /* official seal watermark */
+  position: relative;
+}
+
+.wp-dialogue::after {
+  content: "";
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  width: 100%;
+  height: 2px;
+  background: linear-gradient(
+    to right,
+    var(--wp-accent) 0%,
+    var(--wp-muted) 40%,
+    transparent 100%
+  );
+}
+
 .wp-dialogue__text {
-  font-size: clamp(19px, 2.2vw, 26px);
-  line-height: 1.5;
+  font-size: clamp(17px, 1.8vw, 22px);
+  line-height: 1.7;
   margin: 0;
+  letter-spacing: 0.01em;
+  /* typewriter cursor */
 }
 .wp-dialogue__text::after {
-  content: "";
-  display: inline-block;
-  width: 2px;
-  height: 1em;
+  content: "▌";
+  display: inline;
+  color: var(--wp-accent);
+  animation: wp-blink 800ms steps(1) infinite;
   margin-left: 2px;
-  vertical-align: -0.15em;
-  background: var(--wp-accent);
-  animation: wp-caret 1s steps(1) infinite;
+  font-weight: 100;
 }
 .wp-dialogue[data-streaming="false"] .wp-dialogue__text::after { display: none; }
 
-/* answer box */
+/* === ANSWER BOX === */
 .wp-answer {
   display: flex;
-  gap: 10px;
-  margin-top: 20px;
+  gap: 0;
+  border: 1px solid var(--wp-border);
+  background: var(--wp-card);
+  transition: border-color 200ms ease;
 }
+.wp-answer:focus-within { border-color: var(--wp-accent); }
+
 .wp-answer__input {
   flex: 1;
   font: inherit;
-  font-size: 16px;
-  padding: 12px 14px;
-  border-radius: 10px;
-  border: 1px solid var(--wp-border);
-  background: #1f1f26;
+  font-size: 14px;
+  padding: 14px 16px;
+  background: transparent;
+  border: none;
   color: var(--wp-fg);
   outline: none;
+  letter-spacing: inherit;
 }
-.wp-answer__input:focus { border-color: var(--wp-accent); }
+.wp-answer__input::placeholder { color: var(--wp-muted); font-style: italic; }
+
 .wp-answer__submit {
   font: inherit;
-  font-weight: 600;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
   padding: 0 20px;
   border: none;
-  border-radius: 10px;
+  border-left: 1px solid var(--wp-border);
   background: var(--wp-accent);
-  color: #fff;
+  color: var(--wp-bg);
   cursor: pointer;
+  transition: background 150ms ease, color 150ms ease;
 }
-.wp-answer__submit:disabled { opacity: 0.5; cursor: default; }
+.wp-answer__submit:hover { background: #fff; }
+.wp-answer__submit:disabled { opacity: 0.35; cursor: default; }
 
-/* offer modal */
+/* === OFFER MODAL === */
 .wp-offer__backdrop {
   position: fixed;
   inset: 0;
-  background: rgba(0, 0, 0, 0.55);
+  background: rgba(3, 4, 7, 0.82);
+  backdrop-filter: blur(6px);
+  -webkit-backdrop-filter: blur(6px);
   display: grid;
   place-items: center;
   z-index: 1000;
+  animation: wp-fade-in 200ms ease both;
 }
+
 .wp-offer__card {
-  width: min(420px, 90vw);
+  width: min(460px, 90vw);
   background: var(--wp-card);
   border: 1px solid var(--wp-border);
-  border-radius: 16px;
-  padding: 28px;
-  text-align: center;
+  border-radius: 0;
+  padding: 36px 40px;
+  text-align: left;
+  box-shadow: 0 40px 80px rgba(0, 0, 0, 0.8), inset 0 0 0 1px rgba(255,255,255,0.03);
+  /* official seal */
+  position: relative;
+  animation: wp-rise 280ms cubic-bezier(0.15, 0.8, 0.3, 1.2) both;
 }
-.wp-offer__title { font-size: 21px; margin: 0 0 8px; }
-.wp-offer__detail { font-size: 14px; color: var(--wp-muted); margin: 0 0 22px; }
+
+.wp-offer__card::before {
+  content: "✦";
+  position: absolute;
+  top: -14px;
+  left: 40px;
+  font-size: 24px;
+  color: var(--wp-accent);
+  background: var(--wp-bg);
+  padding: 0 8px;
+  line-height: 1;
+}
+
+.wp-offer__title {
+  font-size: 20px;
+  margin: 0 0 6px;
+  letter-spacing: 0.01em;
+  line-height: 1.4;
+  color: var(--wp-fg);
+}
+
+.wp-offer__detail {
+  font-size: 11px;
+  letter-spacing: 0.25em;
+  text-transform: uppercase;
+  color: var(--wp-amber);
+  margin: 0 0 28px;
+  padding-bottom: 24px;
+  border-bottom: 1px solid var(--wp-border);
+}
+
+.wp-offer__actions { display: flex; gap: 12px; }
+
 .wp-offer__accept,
 .wp-offer__argue {
   font: inherit;
-  font-weight: 600;
-  font-size: 15px;
-  padding: 11px 22px;
-  border-radius: 10px;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  padding: 12px 20px;
   cursor: pointer;
-  margin: 0 6px;
+  border-radius: 0;
+  transition: all 150ms ease;
+  margin: 0;
 }
-.wp-offer__accept { border: none; background: var(--wp-accent); color: #fff; }
-.wp-offer__argue { border: 1px solid var(--wp-border); background: transparent; color: var(--wp-fg); }
+.wp-offer__accept {
+  border: 1px solid var(--wp-accent);
+  background: var(--wp-accent);
+  color: var(--wp-bg);
+}
+.wp-offer__accept:hover { background: #fff; border-color: #fff; }
+.wp-offer__argue {
+  border: 1px solid var(--wp-border);
+  background: transparent;
+  color: var(--wp-muted);
+}
+.wp-offer__argue:hover { border-color: var(--wp-muted); color: var(--wp-fg); }
 
-/* stamp animation */
+/* === STAMP ANIMATION === */
 .wp-stamp {
   position: fixed;
   inset: 0;
@@ -158,29 +262,50 @@
   place-items: center;
   z-index: 1100;
   pointer-events: none;
+  background: rgba(5, 6, 10, 0.6);
+  backdrop-filter: blur(2px);
 }
 .wp-stamp::before {
   content: "PASSAGE GRANTED";
-  font-weight: 800;
-  letter-spacing: 0.16em;
-  font-size: clamp(24px, 5vw, 56px);
+  font-size: clamp(20px, 4vw, 52px);
+  font-weight: 900;
+  letter-spacing: 0.3em;
+  text-transform: uppercase;
   color: var(--wp-accent);
-  border: 5px solid var(--wp-accent);
-  border-radius: 12px;
-  padding: 16px 30px;
-  transform: rotate(-12deg) scale(2.2);
+  border: 3px solid var(--wp-accent);
+  padding: 20px 48px;
+  transform: rotate(-8deg) scale(2.8);
   opacity: 0;
-  animation: wp-stamp 700ms cubic-bezier(0.2, 0.7, 0.2, 1) forwards;
+  animation: wp-stamp 600ms cubic-bezier(0.2, 0.6, 0.2, 1) forwards;
 }
 
-@keyframes wp-caret { 0%, 49% { opacity: 1; } 50%, 100% { opacity: 0; } }
+/* === KEYFRAMES === */
+@keyframes wp-blink { 0%, 49% { opacity: 1; } 50%, 100% { opacity: 0; } }
+@keyframes wp-fade-in { from { opacity: 0; } to { opacity: 1; } }
+@keyframes wp-rise {
+  from { opacity: 0; transform: translateY(20px) scale(0.97); }
+  to { opacity: 1; transform: translateY(0) scale(1); }
+}
 @keyframes wp-stamp {
-  0% { opacity: 0; transform: rotate(-12deg) scale(2.2); }
-  60% { opacity: 1; transform: rotate(-12deg) scale(0.95); }
-  100% { opacity: 1; transform: rotate(-12deg) scale(1); }
+  0% { opacity: 0; transform: rotate(-8deg) scale(2.8); }
+  50% { opacity: 1; transform: rotate(-8deg) scale(0.92); }
+  100% { opacity: 1; transform: rotate(-8deg) scale(1); }
 }
 
-@media (max-width: 720px) {
-  .wp-stage { grid-template-columns: 1fr; text-align: center; }
-  .wp-persona { order: -1; }
+/* === RESPONSIVE === */
+@media (max-width: 680px) {
+  .wp-stage {
+    grid-template-columns: 1fr;
+    padding: 32px 24px;
+    border-left: none;
+    gap: 24px;
+  }
+  .wp-persona {
+    order: -1;
+    padding: 0;
+    border-left: none;
+    border-bottom: 1px solid var(--wp-border);
+    padding-bottom: 24px;
+  }
+  .wp-persona__name { display: none; }
 }
